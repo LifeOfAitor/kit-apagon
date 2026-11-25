@@ -1,6 +1,6 @@
 # 0002. Versión mínima: Android 8.0 (API 26)
 
-Fecha: 2026-11-25. Estado: Propuesta.
+Fecha: 2026-11-25. Estado: Aceptada.
 
 ## Contexto
 

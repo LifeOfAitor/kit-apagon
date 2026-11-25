@@ -1,6 +1,6 @@
 # 0004. Mapas sin conexión con MapLibre y PMTiles
 
-Fecha: 2026-11-25. Estado: Propuesta.
+Fecha: 2026-11-25. Estado: Aceptada.
 
 ## Contexto
 
@@ -19,8 +19,10 @@ modestos (principio 7) y sin coste (principio 3). Ver `docs/investigacion/02-map
 
 ## Decisión
 
-MapLibre Native para Android con un archivo PMTiles del municipio, más una base de datos local de
-puntos de interés generada a partir de OpenStreetMap con un script publicado en el repositorio.
+MapLibre Native para Android con un archivo PMTiles del municipio que elija cada usuario, más una
+base de datos local de puntos de interés generada a partir de OpenStreetMap con un script publicado
+en el repositorio. La app sirve para cualquier municipio de España, y el diseño no debe impedir
+ampliarla a otros países. Cómo se generan y se distribuyen esos paquetes se decide en la decisión 0006.
 
 ## Consecuencias
 

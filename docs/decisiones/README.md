@@ -34,8 +34,23 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 
 | Número | Título | Estado |
 |---|---|---|
-| 0001 | Licencia del proyecto: GPL-3.0-or-later | Propuesta |
-| 0002 | Versión mínima: Android 8.0 (API 26) | Propuesta |
-| 0003 | Mensajería en malla compatible con el protocolo de BitChat | Propuesta |
-| 0004 | Mapas sin conexión con MapLibre y PMTiles | Propuesta |
-| 0005 | Guía propia primero; Kiwix como ampliación posterior | Propuesta |
+| 0001 | Licencia del proyecto: GPL-3.0-or-later | Aceptada |
+| 0002 | Versión mínima: Android 8.0 (API 26) | Aceptada |
+| 0003 | Mensajería en malla compatible con el protocolo de BitChat | Aceptada |
+| 0004 | Mapas sin conexión con MapLibre y PMTiles | Aceptada |
+| 0005 | Guía propia primero; Kiwix como ampliación posterior | Aceptada |
+
+## Próximas decisiones (pendientes de investigar)
+
+- **0006. Generación y distribución de los paquetes por municipio.** Cada usuario descarga el
+  paquete de su municipio (mapa y puntos de interés). España tiene más de 8.000 municipios y la
+  idea es poder ampliarlo a otros países. Hay que decidir cómo se generan automáticamente, dónde se
+  alojan gratis, cómo se actualizan y cómo se verifica que un paquete descargado está completo.
+- **0007. Formato abierto para los datos de los ayuntamientos.** Los ayuntamientos podrán aportar sus
+  puntos de encuentro y lugares importantes. Hace falta un formato sencillo, documentado y validado
+  automáticamente, y revisar la licencia de esos datos antes de mezclarlos con OpenStreetMap.
+- **0008. Arquitectura de la app y librerías base.** Interfaz, almacenamiento local, inyección de
+  dependencias y librerías de tests, elegidas pensando en un móvil de 2 GB de RAM.
+- **0009. Estrategia de pruebas con dispositivos reales.** Solo hay un móvil disponible (Samsung
+  Galaxy A20). Hay que definir qué se prueba en el emulador, qué en el A20 y cómo conseguir un
+  segundo móvil para la malla.

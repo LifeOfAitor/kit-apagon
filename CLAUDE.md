@@ -37,7 +37,14 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
 ## Stack
 
 - Kotlin nativo, Android primero. iOS en una fase posterior.
-- Los detalles (versión mínima de Android, librerías) se fijan en `docs/decisiones/`.
+- Licencia GPL-3.0-or-later y repositorio público (decisión 0001).
+- Android 8.0 (API 26) como mínimo (decisión 0002).
+- Malla Bluetooth compatible con el protocolo de BitChat, solo la parte sin internet (decisión 0003).
+- Mapas con MapLibre y PMTiles; cada usuario descarga el paquete de su municipio. Cobertura: toda
+  España, sin impedir otros países (decisión 0004).
+- Guía propia con fuentes oficiales; Kiwix más adelante (decisión 0005).
+- Dispositivo de pruebas disponible: un Samsung Galaxy A20. El emulador no sirve para probar Bluetooth.
+- El resto de decisiones, y las pendientes, están en `docs/decisiones/README.md`.
 
 ## Flujo de trabajo con Git y GitHub
 

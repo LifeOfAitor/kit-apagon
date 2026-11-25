@@ -1,6 +1,6 @@
 # 0001. Licencia del proyecto: GPL-3.0-or-later
 
-Fecha: 2026-11-25. Estado: Propuesta.
+Fecha: 2026-11-25. Estado: Aceptada.
 
 ## Contexto
 

@@ -1,6 +1,6 @@
 # 0003. Mensajería en malla compatible con el protocolo de BitChat
 
-Fecha: 2026-11-25. Estado: Propuesta.
+Fecha: 2026-11-25. Estado: Aceptada.
 
 ## Contexto
 

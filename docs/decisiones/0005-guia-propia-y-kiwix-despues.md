@@ -1,6 +1,6 @@
 # 0005. Guía propia primero; Kiwix como ampliación posterior
 
-Fecha: 2026-11-25. Estado: Propuesta.
+Fecha: 2026-11-25. Estado: Aceptada.
 
 ## Contexto
 

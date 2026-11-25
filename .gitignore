@@ -1,0 +1,25 @@
+# Sistema operativo
+.DS_Store
+
+# Gradle y compilación
+.gradle/
+build/
+.kotlin/
+
+# Android Studio e IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Configuración local, nunca al repositorio
+local.properties
+
+# Claves de firma, nunca al repositorio
+*.jks
+*.keystore
+keystore.properties
+
+# Ajustes locales de Claude Code
+.claude/settings.local.json

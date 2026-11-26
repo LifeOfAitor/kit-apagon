@@ -23,6 +23,7 @@ class GeneratorCommandRunner(
 ) {
     private val packageCommands = PackageCommands(print, mapExtractorFor)
     private val indexCommands = IndexCommands(environment, print)
+    private val publicationCommands = PublicationCommands(print)
 
     fun run(command: GeneratorCommand) =
         when (command) {
@@ -30,6 +31,11 @@ class GeneratorCommandRunner(
             is GeneratorCommand.RegionArea -> packageCommands.regionArea(command)
             is GeneratorCommand.BuildPackages -> packageCommands.buildPackages(command)
             is GeneratorCommand.SignIndex -> indexCommands.signIndex(command)
+            is GeneratorCommand.NewSigningKey -> indexCommands.newSigningKey(command)
+            is GeneratorCommand.OfficialMunicipalities -> publicationCommands.officialMunicipalities(command)
+            is GeneratorCommand.CheckMunicipalities -> publicationCommands.checkMunicipalities(command)
+            is GeneratorCommand.ReleaseLeftovers -> publicationCommands.releaseLeftovers(command)
+            is GeneratorCommand.ObsoleteReleases -> publicationCommands.obsoleteReleases(command)
         }
 }
 

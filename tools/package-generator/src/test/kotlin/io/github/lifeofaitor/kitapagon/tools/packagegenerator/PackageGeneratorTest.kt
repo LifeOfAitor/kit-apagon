@@ -58,9 +58,31 @@ class PackageGeneratorTest {
     @Test
     fun readsTheSignIndexCommand() {
         assertEquals(
-            GeneratorCommand.SignIndex(File("parts"), File("published")),
-            GeneratorCommand.parseOrNull(listOf("sign-index", "--parts", "parts", "--output", "published")),
+            GeneratorCommand.SignIndex(File("parts"), File("key.txt"), File("published")),
+            GeneratorCommand.parseOrNull("sign-index --parts parts --public-key key.txt --output published".split(" ")),
         )
+    }
+
+    @Test
+    fun readsTheCommandsOfTheMonthlyPublication() {
+        assertEquals(GeneratorCommand.NewSigningKey(File("keys")), parse("new-signing-key --output keys"))
+        assertEquals(
+            GeneratorCommand.OfficialMunicipalities(File("26codmun.xlsx"), File("municipios.csv")),
+            parse("official-municipalities --spreadsheet 26codmun.xlsx --output municipios.csv"),
+        )
+        assertEquals(
+            GeneratorCommand.CheckMunicipalities(File("b"), File("o.csv"), "20", File("informe.txt")),
+            parse("check-municipalities --boundaries b --official o.csv --report informe.txt --provinces 20"),
+        )
+        assertEquals(
+            GeneratorCommand.ReleaseLeftovers(File("r.json"), "2026-12-02"),
+            parse("release-leftovers --releases r.json --data-version 2026-12-02"),
+        )
+        assertEquals(
+            GeneratorCommand.ObsoleteReleases(File("r.json"), 2),
+            parse("obsolete-releases --releases r.json --keep 2"),
+        )
+        assertNull(parse("obsolete-releases --releases r.json --keep two"))
     }
 
     @Test
@@ -89,6 +111,8 @@ class PackageGeneratorTest {
 
         assertEquals("pharmacy: 1\ndrinking_water: 2\ntotal: 3", PlacesSummary.describe(places))
     }
+
+    private fun parse(commandLine: String) = GeneratorCommand.parseOrNull(commandLine.split(" "))
 
     private fun place(
         category: PlaceCategory,

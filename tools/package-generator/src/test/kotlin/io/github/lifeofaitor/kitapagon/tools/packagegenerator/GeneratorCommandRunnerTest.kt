@@ -10,6 +10,8 @@ import io.github.lifeofaitor.kitapagon.core.packageformat.indexSigningKeyPair
 import io.github.lifeofaitor.kitapagon.core.packageformat.validHeader
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermission
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -119,8 +121,66 @@ class GeneratorCommandRunnerTest {
     }
 
     @Test
-    fun signsTheJoinedIndexSoThatTheAppAcceptsIt() {
-        val keyPair = indexSigningKeyPair()
+    fun signsTheJoinedIndexWithANewKeySoThatTheAppAcceptsIt() {
+        val keys = File(temporaryDirectory, "keys")
+        runner().run(GeneratorCommand.NewSigningKey(keys))
+        val parts = indexPartsOfTwoProvinces()
+        val published = File(temporaryDirectory, "published")
+        val privateKey = File(keys, SigningKeys.PRIVATE_KEY_FILE_NAME).readText()
+        val publicKeyFile = File(keys, SigningKeys.PUBLIC_KEY_FILE_NAME)
+
+        runner(signingKey = privateKey).run(GeneratorCommand.SignIndex(parts, publicKeyFile, published))
+
+        val indexBytes = File(published, "index.json").readBytes()
+        val appKey = IndexSignature.publicKeyFrom(publicKeyFile.readText().trim())
+        assertTrue(IndexSignature.isValid(indexBytes, File(published, "index.json.sig").readBytes(), appKey))
+        val index = assertIs<PackageIndexResult.Valid>(PackageIndexParser.parse(indexBytes.decodeToString())).index
+        assertEquals(listOf("ES-20045", "ES-48020"), index.packages.map { it.id.value })
+        assertEquals("packages: 2\ndata version: 2026-12-01", printed.last())
+    }
+
+    @Test
+    fun publishesNothingWhenTheSecretDoesNotMatchTheKeyOfTheApp() {
+        val keys = File(temporaryDirectory, "keys")
+        runner().run(GeneratorCommand.NewSigningKey(keys))
+        val anotherPrivateKey = Base64.getEncoder().encodeToString(indexSigningKeyPair().private.encoded)
+        val published = File(temporaryDirectory, "published")
+        val command =
+            GeneratorCommand.SignIndex(
+                indexPartsOfTwoProvinces(),
+                File(keys, SigningKeys.PUBLIC_KEY_FILE_NAME),
+                published,
+            )
+
+        assertFailsWith<IllegalStateException> { runner(signingKey = anotherPrivateKey).run(command) }
+        assertEquals(false, published.exists())
+    }
+
+    @Test
+    fun refusesToSignWithoutTheKey() {
+        val command =
+            GeneratorCommand.SignIndex(
+                temporaryDirectory,
+                File(temporaryDirectory, "key.txt"),
+                temporaryDirectory,
+            )
+
+        assertFailsWith<IllegalArgumentException> { runner(signingKey = null).run(command) }
+        assertFailsWith<IllegalArgumentException> { runner(signingKey = " ").run(command) }
+    }
+
+    @Test
+    fun createsTheKeyPairOnceAndOnlyTheOwnerCanReadThePrivateKey() {
+        val keys = File(temporaryDirectory, "keys")
+
+        runner().run(GeneratorCommand.NewSigningKey(keys))
+
+        val permissions = Files.getPosixFilePermissions(File(keys, SigningKeys.PRIVATE_KEY_FILE_NAME).toPath())
+        assertEquals(setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE), permissions)
+        assertFailsWith<IllegalStateException> { runner().run(GeneratorCommand.NewSigningKey(keys)) }
+    }
+
+    private fun indexPartsOfTwoProvinces(): File {
         val parts = File(temporaryDirectory, "parts").apply { mkdirs() }
         val sourceMap = sourceMapCovering(GeographicBounds(-4.0, 42.0, 0.0, 44.0))
         listOf("20", "48").forEach { province ->
@@ -129,27 +189,7 @@ class GeneratorCommandRunnerTest {
             File(output, "index-part.json").copyTo(File(parts, "$province.json"))
         }
         File(parts, "notes.txt").writeText("not a part")
-        val published = File(temporaryDirectory, "published")
-
-        runner(
-            signingKey = Base64.getEncoder().encodeToString(keyPair.private.encoded),
-        ).run(GeneratorCommand.SignIndex(parts, published))
-
-        val indexBytes = File(published, "index.json").readBytes()
-        assertTrue(IndexSignature.isValid(indexBytes, File(published, "index.json.sig").readBytes(), keyPair.public))
-        val index = assertIs<PackageIndexResult.Valid>(PackageIndexParser.parse(indexBytes.decodeToString())).index
-        assertEquals(listOf("ES-20045", "ES-48020"), index.packages.map { it.id.value })
-        assertEquals("packages: 2\ndata version: 2026-12-01", printed.last())
-    }
-
-    @Test
-    fun refusesToSignWithoutTheKey() {
-        assertFailsWith<IllegalArgumentException> {
-            runner(signingKey = null).run(GeneratorCommand.SignIndex(temporaryDirectory, temporaryDirectory))
-        }
-        assertFailsWith<IllegalArgumentException> {
-            runner(signingKey = " ").run(GeneratorCommand.SignIndex(temporaryDirectory, temporaryDirectory))
-        }
+        return parts
     }
 
     @Test

@@ -23,3 +23,6 @@ keystore.properties
 
 # Ajustes locales de Claude Code
 .claude/settings.local.json
+
+# Herramientas de Node
+node_modules/

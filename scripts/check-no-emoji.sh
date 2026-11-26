@@ -12,7 +12,7 @@ readonly EMOJI_PATTERN='[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x
 
 find_emojis_in_tracked_files() {
     git ls-files -z \
-        | grep -z -v -E '\.(jar|png|jpg|webp|pmtiles)$' \
+        | grep -z -v -E '\.(jar|png|jpg|webp|pmtiles|pbf)$' \
         | xargs -0 perl -CSD -ne "print \"\$ARGV:\$.: \$_\" if /$EMOJI_PATTERN/; close ARGV if eof"
 }
 

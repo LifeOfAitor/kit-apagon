@@ -1,0 +1,13 @@
+{
+  "name": "kit-apagon-map-style",
+  "private": true,
+  "description": "Generates the offline map styles bundled in feature/map (decision 0010).",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-styles.mjs"
+  },
+  "dependencies": {
+    "@protomaps/basemaps": "5.7.2"
+  }
+}

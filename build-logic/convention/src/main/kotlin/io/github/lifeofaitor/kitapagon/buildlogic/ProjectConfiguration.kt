@@ -22,4 +22,7 @@ internal object ProjectConfiguration {
     const val TARGET_SDK = 36
 
     const val JAVA_BYTECODE_VERSION = 17
+
+    /** Minimum line coverage of the pure Kotlin modules, checked by koverVerify. */
+    const val MINIMUM_LINE_COVERAGE_PERCENT = 90
 }

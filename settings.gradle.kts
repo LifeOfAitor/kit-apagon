@@ -19,3 +19,5 @@ rootProject.name = "kit-apagon"
 
 include(":app")
 include(":core:ui")
+include(":core:package-format")
+include(":feature:map")

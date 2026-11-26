@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Debug builds only. Lets scripts/install-test-package.sh install a test package on phones where
+    `adb shell run-as` is blocked. The DUMP permission is held by the adb shell and never by other
+    apps, so only a developer with a cable can trigger it.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <receiver
+            android:name=".development.TestPackageImportReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="io.github.lifeofaitor.kitapagon.IMPORT_TEST_PACKAGES" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

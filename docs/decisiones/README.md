@@ -44,6 +44,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0006 | Generación y distribución de los paquetes por municipio | Aceptada |
 | 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Aceptada |
 | 0008 | Arquitectura de la app y librerías base | Aceptada |
+| 0010 | Primer mapa sin conexión: MapLibre, estilo y recursos | Aceptada |
 
 ## Próximas decisiones (pendientes de investigar)
 

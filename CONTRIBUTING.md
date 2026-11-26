@@ -25,6 +25,26 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 | `./gradlew ktlintFormat` | Corrige el formato del código automáticamente. |
 | `./gradlew :app:testDebugUnitTest :core:ui:testDebugUnitTest` | Ejecuta los tests. Cada test se ejecuta en Android 8 y en Android 16. |
 
+## Probar el mapa en un móvil o emulador
+
+Hasta que la app pueda descargar paquetes por sí misma, el paquete de prueba se instala con:
+
+```bash
+scripts/install-test-package.sh
+```
+
+Recorta Irun (`ES-20045`) de la última compilación de Protomaps y lo instala en la versión de
+depuración de la app conectada por cable. Necesita `pmtiles` (`brew install pmtiles`) y `python3`.
+Para otro municipio: `scripts/install-test-package.sh IDENTIFICADOR oeste,sur,este,norte`.
+
+## Regenerar el estilo del mapa
+
+Solo hace falta si se cambia de versión de Protomaps o se modifica el estilo. Necesita Node:
+
+```bash
+cd tools/map-style && npm ci && npm run generate && ./download-assets.sh
+```
+
 ## Problemas conocidos
 
 - Si una tarea falla con `Failed to exec spawn helper` o `Cannot run program`, el proceso de Gradle en

@@ -41,13 +41,13 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0003 | Mensajería en malla compatible con el protocolo de BitChat | Aceptada |
 | 0004 | Mapas sin conexión con MapLibre y PMTiles | Aceptada |
 | 0005 | Guía propia primero; Kiwix como ampliación posterior | Aceptada |
-| 0006 | Generación y distribución de los paquetes por municipio | Aceptada (la 0013 propone sustituir los límites y la firma) |
+| 0006 | Generación y distribución de los paquetes por municipio | Aceptada (límites y firma sustituidos por la 0013) |
 | 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Aceptada |
 | 0008 | Arquitectura de la app y librerías base | Aceptada |
 | 0010 | Primer mapa sin conexión: MapLibre, estilo y recursos | Aceptada |
 | 0011 | Puntos de interés: tipos, formato y presentación | Aceptada |
 | 0012 | Repetir las comprobaciones solo cuando falla una descarga | Aceptada |
-| 0013 | Paquetes de toda España: límites, firma, publicación y descarga | Propuesta |
+| 0013 | Paquetes de toda España: límites, firma, publicación y descarga | Aceptada |
 
 ## Próximas decisiones (pendientes de investigar)
 

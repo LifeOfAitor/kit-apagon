@@ -1,6 +1,6 @@
 # 0013. Paquetes de toda España: límites, firma, publicación y descarga
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 Sustituye dos puntos de la decisión 0006: la fuente de los límites municipales y el algoritmo de
 firma del índice. El resto de la 0006 sigue vigente.

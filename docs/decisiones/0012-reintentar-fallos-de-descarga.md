@@ -1,6 +1,6 @@
 # 0012. Repetir las comprobaciones solo cuando falla una descarga
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 ## Contexto
 

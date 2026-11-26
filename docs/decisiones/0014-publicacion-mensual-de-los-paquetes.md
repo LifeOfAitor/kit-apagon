@@ -1,6 +1,6 @@
 # 0014. Publicación mensual de los paquetes
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 Sustituye la forma de publicar de la decisión 0013 (un archivo por municipio en una publicación por
 provincia) y completa cómo descarga la app. El resto de la 0013 sigue vigente.

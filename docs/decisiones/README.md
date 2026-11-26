@@ -39,16 +39,11 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0003 | Mensajería en malla compatible con el protocolo de BitChat | Aceptada |
 | 0004 | Mapas sin conexión con MapLibre y PMTiles | Aceptada |
 | 0005 | Guía propia primero; Kiwix como ampliación posterior | Aceptada |
+| 0006 | Generación y distribución de los paquetes por municipio | Propuesta |
+| 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Propuesta |
 
 ## Próximas decisiones (pendientes de investigar)
 
-- **0006. Generación y distribución de los paquetes por municipio.** Cada usuario descarga el
-  paquete de su municipio (mapa y puntos de interés). España tiene más de 8.000 municipios y la
-  idea es poder ampliarlo a otros países. Hay que decidir cómo se generan automáticamente, dónde se
-  alojan gratis, cómo se actualizan y cómo se verifica que un paquete descargado está completo.
-- **0007. Formato abierto para los datos de los ayuntamientos.** Los ayuntamientos podrán aportar sus
-  puntos de encuentro y lugares importantes. Hace falta un formato sencillo, documentado y validado
-  automáticamente, y revisar la licencia de esos datos antes de mezclarlos con OpenStreetMap.
 - **0008. Arquitectura de la app y librerías base.** Interfaz, almacenamiento local, inyección de
   dependencias y librerías de tests, elegidas pensando en un móvil de 2 GB de RAM.
 - **0009. Estrategia de pruebas con dispositivos reales.** Solo hay un móvil disponible (Samsung

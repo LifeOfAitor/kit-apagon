@@ -51,7 +51,11 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
   Kotlin puro. Compose, MapLibre Native dentro de `AndroidView`, inyección manual, Room, DataStore,
   WorkManager, OkHttp, kotlinx.serialization y ACRA (decisión 0008).
 - Solo versiones estables, fijadas en `gradle/libs.versions.toml`; nada en alfa o beta en el código que
-  llega al usuario. Toda librería nueva se registra en `docs/licencias-de-terceros.md`.
+  llega al usuario. Al añadir o actualizar una librería que llega al usuario, se elige la última
+  versión estable con al menos dos semanas publicada (decisión 0010). Toda librería nueva se registra
+  en `docs/licencias-de-terceros.md`.
+- Los módulos de Kotlin puro también se ejecutan en Android 8: solo pueden usar APIs de Java
+  disponibles en Android 8 (API 26). Por ejemplo, `InputStream.readNBytes` no está disponible.
 - Calidad: JUnit 5 y kotlin.test en Kotlin puro, JUnit 4 con Robolectric donde Android lo exija,
   Turbine, Kotest para pruebas basadas en propiedades, objetos falsos antes que MockK, Kover, ktlint,
   Android Lint con avisos como errores y detekt 1.23.8 como herramienta independiente.

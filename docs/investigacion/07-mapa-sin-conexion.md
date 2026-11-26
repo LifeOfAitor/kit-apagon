@@ -36,9 +36,12 @@ Contenido del paquete 13.8.0, comprobado abriendo el archivo:
 - **Generador:** paquete `@protomaps/basemaps` 5.7.2 (BSD-3-Clause), compatible con las compilaciones
   de Protomaps que medimos (esquema 4). Prueba realizada: genera los estilos claro y oscuro con 71
   capas y unos 65 KB cada uno.
-- **Nombres de lugar:** con el idioma `es`, el estilo muestra el nombre local de OpenStreetMap cuando
-  está en alfabeto latino, que es el caso de toda España. Por ejemplo, "Hondarribia" y no
-  "Fuenterrabía".
+- **Nombres de lugar:** con el idioma `es`, el estilo muestra primero la traducción al castellano
+  (`name:es`) y solo si no existe el nombre local, aunque el nombre local ya esté en alfabeto latino.
+  En Irun salía "Irún", "Oyárzun" y "Hendaya" en lugar de "Irun", "Oiartzun" y "Hendaye".
+  Corrección del 2026-11-26: la primera versión de este documento afirmaba lo contrario, sin haberlo
+  comprobado en un móvil. El generador del proyecto (`tools/map-style/generate-styles.mjs`) invierte
+  ese orden solo para nombres en alfabeto latino, como pide la decisión 0010, y un test lo vigila.
 - **Ejecutarlo:** la orden de línea de comandos del paquete necesita una herramienta extra (`tsx`).
   Basta con un script de Node de diez líneas que llama a su interfaz en JavaScript. Node solo hace
   falta para regenerar el estilo, nunca para compilar la app.

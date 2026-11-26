@@ -4,4 +4,35 @@
     <string name="map_no_package_installed">Todavía no hay ningún mapa instalado en este móvil.</string>
     <string name="map_package_damaged">El mapa %1$s está dañado y no se puede mostrar.</string>
     <string name="map_attribution">© OpenStreetMap (ODbL) · Protomaps</string>
+    <string name="map_view_map">Mapa</string>
+    <string name="map_view_list">Lista</string>
+    <string name="map_places_damaged">Los lugares de este mapa están dañados y no se pueden mostrar. El mapa sigue funcionando.</string>
+
+    <string name="place_pharmacy">Farmacia</string>
+    <string name="place_health_centre">Centro sanitario</string>
+    <string name="place_drinking_water">Agua potable</string>
+    <string name="place_assembly_point">Punto de encuentro</string>
+    <string name="place_defibrillator">Desfibrilador</string>
+    <string name="place_police">Policía</string>
+    <string name="place_fire_station">Bomberos</string>
+
+    <string name="places_pharmacies">Farmacias</string>
+    <string name="places_health_centres">Centros sanitarios</string>
+    <string name="places_drinking_water">Agua potable</string>
+    <string name="places_assembly_points">Puntos de encuentro</string>
+    <string name="places_defibrillators">Desfibriladores</string>
+    <string name="places_police">Policía</string>
+    <string name="places_fire_stations">Bomberos</string>
+
+    <string name="places_all">Todos</string>
+    <string name="places_group_title">%1$s (%2$d)</string>
+    <string name="places_none_in_package">Este mapa no tiene lugares de ese tipo.</string>
+    <string name="places_unavailable_without_location">La lista no está ordenada por cercanía porque la app todavía no usa tu ubicación.</string>
+
+    <string name="place_opening_hours">Horario: %1$s</string>
+    <string name="place_call">Llamar al %1$s</string>
+    <string name="place_dialer_unavailable">Este dispositivo no puede abrir el teléfono.</string>
+    <string name="place_close">Cerrar</string>
+    <string name="place_source_openstreetmap">Fuente: OpenStreetMap. Puede estar incompleto o desactualizado; no sustituye a la información oficial.</string>
+    <string name="place_source_official">Fuente: datos oficiales del ayuntamiento.</string>
 </resources>

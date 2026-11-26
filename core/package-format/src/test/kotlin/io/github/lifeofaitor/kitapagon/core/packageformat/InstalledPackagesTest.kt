@@ -36,6 +36,15 @@ class InstalledPackagesTest {
     }
 
     @Test
+    fun pointsEachPackageToItsPlacesFileEvenWhenItDoesNotExistYet() {
+        installPackage("ES-20045")
+
+        val installedPackage = InstalledPackages(packagesDirectory).list().single()
+
+        assertEquals(File(packagesDirectory, "ES-20045/places.json"), installedPackage.placesFile)
+    }
+
+    @Test
     fun ignoresPackagesWithoutAMapFile() {
         File(packagesDirectory, "ES-20045").mkdirs()
 

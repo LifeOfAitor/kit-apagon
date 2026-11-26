@@ -93,3 +93,35 @@ Conclusiones:
   o cuando deja de verse (`onLowMemory` de MapLibre), algo que antes no se hacía.
 - Una primera medición sin precarga se descartó porque la compilación había fallado y se midió, sin
   saberlo, el APK anterior. El script de medición ahora solo se ejecuta si la compilación termina bien.
+
+## 2026-11-26: lugares en el mapa (decisión 0011)
+
+Galaxy A51, versión de publicación, paquete de Irun con 273 lugares (`places.json`, 53 KB). Tres
+pasadas: vista inicial y tras cinco dobles toques sobre el centro de Irun.
+
+| Medida | Resultado | Antes de los lugares |
+|---|---|---|
+| Tamaño del APK, arm64-v8a | 14,4 MB | 14,2 MB |
+| Tamaño del APK, armeabi-v7a | 11,1 MB | 11,0 MB |
+| Memoria, vista inicial | 223-229 MB (PSS), 137 MB gráficos | 230 MB |
+| Memoria, a nivel de calle | 241 MB (PSS), 136 MB gráficos, 80 MB nativa | - |
+
+Los lugares apenas añaden memoria. El riesgo de memoria del mapa sigue siendo el mismo que antes.
+
+Comprobaciones manuales en el móvil, sin red:
+
+- Los lugares se dibujan con su icono y color. Cuando se solapan gana el más importante; las fuentes
+  solo aparecen a partir del zoom 13.
+- Los marcadores no tapan los nombres de pueblos, regiones y países (Irun, Oiartzun, Hendaye). En
+  una primera versión los tapaban; un segundo intento los amontonaba unos sobre otros. La solución
+  final coloca la capa de lugares justo encima de los nombres de barrios.
+- Al tocar una farmacia el mapa se centra en ella y se abre su ficha con tipo y fuente del dato.
+- Desde la lista, elegir el hospital del Bidasoa lo abre en el mapa con su ficha y su teléfono.
+- La tecla atrás cierra primero la ficha y después vuelve a la pantalla de inicio. En la primera
+  versión salía directamente al inicio.
+
+Problemas de los datos de OpenStreetMap vistos en la prueba (no de la app):
+
+- Una farmacia tiene como nombre su dirección ("Pintor Berrueta, 1").
+- El hospital del Bidasoa aparece dos veces: como punto y como edificio. El generador debería
+  eliminar estos duplicados; queda pendiente para el paso 3.

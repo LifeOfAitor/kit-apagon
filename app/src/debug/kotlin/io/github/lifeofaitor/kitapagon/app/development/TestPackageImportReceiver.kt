@@ -8,8 +8,8 @@ import io.github.lifeofaitor.kitapagon.core.packageformat.InstalledPackages
 import java.io.File
 
 /**
- * Debug builds only: imports the test maps that scripts/install-test-package.sh pushes into the
- * app's external files directory. Asking for that directory also creates it owned by the app, so
+ * Debug builds only: imports the test package files that scripts/install-test-package.sh pushes into
+ * the app's external files directory. Asking for that directory also creates it owned by the app, so
  * the script calls this receiver once before pushing (files pushed into a directory created by the
  * adb shell cannot be read by the app) and once after.
  */
@@ -18,26 +18,30 @@ class TestPackageImportReceiver : BroadcastReceiver() {
         context: Context,
         intent: Intent,
     ) {
-        val pushedMapsDirectory = context.getExternalFilesDir(AppContainer.MUNICIPAL_PACKAGES_DIRECTORY) ?: return
+        val pushedFilesDirectory = context.getExternalFilesDir(AppContainer.MUNICIPAL_PACKAGES_DIRECTORY) ?: return
         val privatePackagesDirectory = File(context.filesDir, AppContainer.MUNICIPAL_PACKAGES_DIRECTORY)
-        importPushedMaps(pushedMapsDirectory, privatePackagesDirectory)
+        importPushedPackageFiles(pushedFilesDirectory, privatePackagesDirectory)
     }
 }
 
-/** Turns every pushed `<package id>.pmtiles` file into the installed package `<package id>/map.pmtiles`. */
-internal fun importPushedMaps(
-    pushedMapsDirectory: File,
+// The script pushes flat files named after the package; each one goes to its place inside the package.
+private val PUSHED_FILE_SUFFIXES =
+    mapOf(
+        ".pmtiles" to InstalledPackages.MAP_FILE_NAME,
+        ".places.json" to InstalledPackages.PLACES_FILE_NAME,
+    )
+
+/** Turns `<package id>.pmtiles` and `<package id>.places.json` into the files of that installed package. */
+internal fun importPushedPackageFiles(
+    pushedFilesDirectory: File,
     packagesDirectory: File,
 ) {
-    pushedMapsDirectory
-        .listFiles()
-        .orEmpty()
-        .filter { candidate -> candidate.isFile && candidate.extension == PUSHED_MAP_EXTENSION }
-        .forEach { pushedMap ->
-            val packageDirectory = File(packagesDirectory, pushedMap.nameWithoutExtension).apply { mkdirs() }
-            pushedMap.copyTo(File(packageDirectory, InstalledPackages.MAP_FILE_NAME), overwrite = true)
-            pushedMap.delete()
-        }
+    pushedFilesDirectory.listFiles().orEmpty().filter { candidate -> candidate.isFile }.forEach { pushedFile ->
+        val (suffix, installedFileName) =
+            PUSHED_FILE_SUFFIXES.entries.firstOrNull { (suffix, _) -> pushedFile.name.endsWith(suffix) }
+                ?: return@forEach
+        val packageDirectory = File(packagesDirectory, pushedFile.name.removeSuffix(suffix)).apply { mkdirs() }
+        pushedFile.copyTo(File(packageDirectory, installedFileName), overwrite = true)
+        pushedFile.delete()
+    }
 }
-
-private const val PUSHED_MAP_EXTENSION = "pmtiles"

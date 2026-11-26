@@ -5,11 +5,14 @@ import java.io.File
 data class InstalledPackage(
     val id: PackageId,
     val mapFile: File,
+    /** Optional: packages made before decision 0011 have no places file. */
+    val placesFile: File,
 )
 
 /**
  * Municipal packages stored on the device, one directory per package named after its identifier:
- * `<rootDirectory>/<package id>/map.pmtiles` (decision 0010).
+ * `<rootDirectory>/<package id>/map.pmtiles` (decision 0010) and, optionally,
+ * `<rootDirectory>/<package id>/places.json` (decision 0011).
  */
 class InstalledPackages(
     private val rootDirectory: File,
@@ -25,9 +28,12 @@ class InstalledPackages(
             .sortedBy { installedPackage -> installedPackage.id.value }
 
     private fun toInstalledPackage(directory: File): InstalledPackage? =
-        PackageId.parseOrNull(directory.name)?.let { id -> InstalledPackage(id, File(directory, MAP_FILE_NAME)) }
+        PackageId.parseOrNull(directory.name)?.let { id ->
+            InstalledPackage(id, File(directory, MAP_FILE_NAME), File(directory, PLACES_FILE_NAME))
+        }
 
     companion object {
         const val MAP_FILE_NAME = "map.pmtiles"
+        const val PLACES_FILE_NAME = "places.json"
     }
 }

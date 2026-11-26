@@ -47,6 +47,9 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
   Actions, con índice firmado con Ed25519 y huellas SHA-256 que permiten usar réplicas (decisión 0006).
 - Datos oficiales de los ayuntamientos en GeoJSON o CSV, publicados en su dominio oficial, validados
   automáticamente y guardados en una capa separada de OpenStreetMap (decisión 0007).
+- Lugares del municipio en `places.json` dentro de cada paquete, leídos a memoria; Room solo para los
+  datos que escribe la app. Generados por `tools:package-generator` a partir de OpenStreetMap
+  (decisión 0011).
 - Arquitectura en capas con módulos de Gradle; la lógica sin dependencias de Android va en módulos de
   Kotlin puro. Compose, MapLibre Native dentro de `AndroidView`, inyección manual, Room, DataStore,
   WorkManager, OkHttp, kotlinx.serialization y ACRA (decisión 0008).

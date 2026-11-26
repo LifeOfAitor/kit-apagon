@@ -87,6 +87,8 @@ tasks.register("verifyAll") {
         ":core:package-format:test",
         ":core:package-format:koverVerify",
         ":feature:map:testDebugUnitTest",
+        ":tools:package-generator:test",
+        ":tools:package-generator:koverVerify",
         ":app:assembleRelease",
     )
 }

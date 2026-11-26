@@ -8,16 +8,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import io.github.lifeofaitor.kitapagon.core.packageformat.GeographicBounds
+import io.github.lifeofaitor.kitapagon.core.packageformat.Place
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
@@ -27,6 +30,8 @@ import org.maplibre.android.maps.Style
 @Composable
 internal fun OfflineMap(
     state: MapScreenState.Ready,
+    selectedPlace: Place?,
+    onPlaceTapped: (Place) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -37,10 +42,40 @@ internal fun OfflineMap(
         }
     val mapView = rememberMapViewFollowingLifecycle()
     ReleaseMapMemoryWhenTheSystemIsLow(mapView)
-    LaunchedEffect(mapView, styleJson) {
-        mapView.getMapAsync { map -> map.showPackage(styleJson, state.bounds) }
+    ReportTappedPlaces(mapView, state.places, onPlaceTapped)
+    LaunchedEffect(mapView, styleJson, state.places) {
+        mapView.getMapAsync { map -> map.showPackage(context, styleJson, state) }
+    }
+    LaunchedEffect(mapView, selectedPlace) {
+        selectedPlace?.let { place -> mapView.getMapAsync { map -> map.centreOn(place) } }
     }
     AndroidView(factory = { mapView }, modifier = modifier.fillMaxSize())
+}
+
+@Composable
+private fun ReportTappedPlaces(
+    mapView: MapView,
+    places: List<Place>,
+    onPlaceTapped: (Place) -> Unit,
+) {
+    val currentPlaces by rememberUpdatedState(places)
+    val currentOnPlaceTapped by rememberUpdatedState(onPlaceTapped)
+    DisposableEffect(mapView) {
+        var attachedMap: MapLibreMap? = null
+        val listener =
+            MapLibreMap.OnMapClickListener { position ->
+                val map = attachedMap ?: return@OnMapClickListener false
+                val placeIndex = PlacesLayer.placeIndexAt(map, map.projection.toScreenLocation(position))
+                val tappedPlace = placeIndex?.let(currentPlaces::getOrNull)
+                tappedPlace?.let(currentOnPlaceTapped)
+                tappedPlace != null
+            }
+        mapView.getMapAsync { map ->
+            map.addOnMapClickListener(listener)
+            attachedMap = map
+        }
+        onDispose { attachedMap?.removeOnMapClickListener(listener) }
+    }
 }
 
 @Composable
@@ -115,18 +150,30 @@ private fun MapView.releaseFrom(currentState: Lifecycle.State) {
 }
 
 private fun MapLibreMap.showPackage(
+    context: Context,
     styleJson: String,
-    bounds: GeographicBounds,
+    state: MapScreenState.Ready,
 ) {
     uiSettings.isLogoEnabled = false
     uiSettings.isAttributionEnabled = false
+    val bounds = state.bounds
     val packageArea = LatLngBounds.from(bounds.north, bounds.east, bounds.south, bounds.west)
     setLatLngBoundsForCameraTarget(packageArea)
     setMaxZoomPreference(MAXIMUM_ZOOM)
-    setStyle(Style.Builder().fromJson(styleJson)) {
+    setStyle(Style.Builder().fromJson(styleJson)) { style ->
+        PlacesLayer.addTo(style, context, state.places)
         moveCamera(CameraUpdateFactory.newLatLngBounds(packageArea, 0))
     }
 }
+
+private fun MapLibreMap.centreOn(place: Place) {
+    animateCamera(
+        CameraUpdateFactory.newLatLngZoom(LatLng(place.location.latitude, place.location.longitude), PLACE_ZOOM),
+    )
+}
+
+// Close enough to see the streets around a place, as tested on the A51 (docs/mediciones.md).
+private const val PLACE_ZOOM = 16.0
 
 // Packages contain tiles up to zoom 14 (decision 0006); MapLibre enlarges them up to this level.
 private const val MAXIMUM_ZOOM = 18.0

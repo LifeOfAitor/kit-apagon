@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Assembly point: three people gathered, drawn for the project because Maki has no such icon
+    (decision 0011). Same 15 x 15 grid and white glyph as the Maki icons.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="15dp"
+    android:height="15dp"
+    android:viewportWidth="15"
+    android:viewportHeight="15">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7.5,1a1.6,1.6 0,1 1,0 3.2a1.6,1.6 0,1 1,0 -3.2z M3.2,3.2a1.4,1.4 0,1 1,0 2.8a1.4,1.4 0,1 1,0 -2.8z M11.8,3.2a1.4,1.4 0,1 1,0 2.8a1.4,1.4 0,1 1,0 -2.8z M5.9,5h3.2a0.8,0.8 0,0 1,0.8 0.8v8.2h-4.8v-8.2a0.8,0.8 0,0 1,0.8 -0.8z M1.6,7h2.9v6h-3.7v-5.2a0.8,0.8 0,0 1,0.8 -0.8z M10.5,7h2.9a0.8,0.8 0,0 1,0.8 0.8v5.2h-3.7z" />
+</vector>

@@ -53,7 +53,8 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | actions/checkout | 7.0.1 | MIT | Integración continua en GitHub |
 | actions/setup-java | 6.3.0 | MIT | Integración continua en GitHub |
 | actions/upload-artifact | 7.0.2 | MIT | Integración continua en GitHub |
-| gradle/actions (wrapper-validation y setup-gradle con la caché básica) | 6.4.1 | MIT | Integración continua en GitHub. Se usa la caché básica, de código abierto, en lugar de la propietaria que viene por defecto. |
+| actions/cache (restore y save) | 6.1.0 | MIT | Caché de las dependencias descargadas en la integración continua |
+| gradle/actions (solo wrapper-validation) | 6.4.1 | MIT | Comprobar que el lanzador de Gradle es el oficial |
 
 ## Datos
 

@@ -58,11 +58,21 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
 - Dispositivo de pruebas disponible: un Samsung Galaxy A20. El emulador no sirve para probar Bluetooth.
 - El resto de decisiones, y las pendientes, están en `docs/decisiones/README.md`.
 
+## Compilar y comprobar
+
+- `JAVA_HOME` debe apuntar a un JDK 21; en este Mac, el de Android Studio:
+  `/Applications/Android Studio.app/Contents/jbr/Contents/Home`.
+- `./gradlew verifyAll` ejecuta todas las comprobaciones obligatorias. Un cambio no está terminado
+  hasta que esta tarea pasa completa.
+- Los tests de Robolectric se ejecutan en Android 8 (API 26) y en la versión objetivo.
+- Los avisos del compilador de Kotlin y de Android Lint son errores. No se desactiva una regla para
+  que pase un cambio: se corrige el código, o se justifica la excepción por escrito junto a la propia regla.
+
 ## Flujo de trabajo con Git y GitHub
 
 - La rama `main` siempre compila y pasa los tests. Nunca se trabaja directamente sobre ella.
-  Excepción temporal: mientras el repositorio solo exista en local y no haya código (fase de
-  investigación), los commits de documentación van directamente a `main`.
+  Durante la fase de investigación, sin código, los commits de documentación fueron directamente a
+  `main`. Esa excepción terminó con el esqueleto del proyecto (rama `feature/esqueleto-proyecto`).
 - Cada cambio va en una rama propia (`feature/...`, `fix/...`, `docs/...`) y entra en `main` mediante pull request.
 - Los commits siguen Conventional Commits en español: `feat: añadir mapa sin conexión`,
   `fix: ...`, `test: ...`, `docs: ...`, `refactor: ...`, `chore: ...`.

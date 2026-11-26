@@ -20,6 +20,15 @@ class PackageCommands(
         print(PlacesSummary.describe(places))
     }
 
+    fun provinces(command: GeneratorCommand.Provinces) {
+        ProvinceSelection
+            .municipalitiesOf(command.boundaries, provinces = null)
+            .map { municipality -> municipality.provinceCode }
+            .distinct()
+            .sorted()
+            .forEach(print)
+    }
+
     fun regionArea(command: GeneratorCommand.RegionArea) {
         val municipalities = ProvinceSelection.municipalitiesOf(command.boundaries, command.provinces)
         print(outwardRounded(regionAreaOf(municipalities)))

@@ -10,6 +10,11 @@ sealed interface GeneratorCommand {
         val output: File,
     ) : GeneratorCommand
 
+    /** Prints the code of every province with municipalities in the boundaries, one per line. */
+    data class Provinces(
+        val boundaries: File,
+    ) : GeneratorCommand
+
     /** Prints the rectangle the source map has to cover so that every package has its margin. */
     data class RegionArea(
         val boundaries: File,
@@ -77,6 +82,7 @@ sealed interface GeneratorCommand {
             """
             Usage:
               places OSMIUM_GEOJSON_INPUT PLACES_JSON_OUTPUT
+              provinces --boundaries FILE
               region-area --boundaries FILE [--provinces 01,20,48]
               build-packages --boundaries FILE --places FILE --map FILE --data-version YYYY-MM-DD
                              --address-template URL --output DIRECTORY [--provinces 01,20,48]
@@ -95,91 +101,88 @@ sealed interface GeneratorCommand {
         fun parseOrNull(arguments: List<String>): GeneratorCommand? {
             val name = arguments.firstOrNull()
             val rest = arguments.drop(1)
-            return when (name) {
-                "places" -> placesOrNull(rest)
-                "region-area" -> regionAreaOrNull(rest)
-                "build-packages" -> buildPackagesOrNull(rest)
-                "sign-index" -> signIndexOrNull(rest)
-                "new-signing-key" -> newSigningKeyOrNull(rest)
-                "official-municipalities" -> officialMunicipalitiesOrNull(rest)
-                "check-municipalities" -> checkMunicipalitiesOrNull(rest)
-                "release-leftovers" -> releaseLeftoversOrNull(rest)
-                "obsolete-releases" -> obsoleteReleasesOrNull(rest)
-                else -> null
+            val specification = SPECIFICATIONS[name]
+            return when {
+                name == "places" -> {
+                    placesOrNull(rest)
+                }
+
+                specification == null -> {
+                    null
+                }
+
+                else -> {
+                    CommandOptions
+                        .parseOrNull(
+                            rest,
+                            specification.required,
+                            specification.optional,
+                        )?.let(specification.create)
+                }
             }
         }
 
+        // The only command with positional arguments, kept as scripts/install-test-package.sh calls it.
         private fun placesOrNull(arguments: List<String>): Places? =
             if (arguments.size == 2) Places(File(arguments[0]), File(arguments[1])) else null
 
-        private fun regionAreaOrNull(arguments: List<String>): RegionArea? =
-            CommandOptions
-                .parseOrNull(arguments, required = setOf("boundaries"), optional = setOf("provinces"))
-                ?.let { options -> RegionArea(options.file("boundaries"), options.optional("provinces")) }
+        private class Specification(
+            val required: Set<String>,
+            val optional: Set<String> = emptySet(),
+            val create: (CommandOptions) -> GeneratorCommand?,
+        )
 
-        private fun buildPackagesOrNull(arguments: List<String>): BuildPackages? =
-            CommandOptions
-                .parseOrNull(
-                    arguments,
-                    required = setOf("boundaries", "places", "map", "data-version", "address-template", "output"),
-                    optional = setOf("provinces"),
-                )?.let { options ->
-                    BuildPackages(
-                        boundaries = options.file("boundaries"),
-                        places = options.file("places"),
-                        sourceMap = options.file("map"),
-                        provinces = options.optional("provinces"),
-                        dataVersion = options.required("data-version"),
-                        addressTemplate = options.required("address-template"),
-                        output = options.file("output"),
-                    )
-                }
-
-        private fun signIndexOrNull(arguments: List<String>): SignIndex? =
-            CommandOptions
-                .parseOrNull(arguments, required = setOf("parts", "public-key", "output"), optional = emptySet())
-                ?.let { options ->
-                    SignIndex(options.file("parts"), options.file("public-key"), options.file("output"))
-                }
-
-        private fun newSigningKeyOrNull(arguments: List<String>): NewSigningKey? =
-            CommandOptions
-                .parseOrNull(arguments, required = setOf("output"), optional = emptySet())
-                ?.let { options -> NewSigningKey(options.file("output")) }
-
-        private fun officialMunicipalitiesOrNull(arguments: List<String>): OfficialMunicipalities? =
-            CommandOptions
-                .parseOrNull(arguments, required = setOf("spreadsheet", "output"), optional = emptySet())
-                ?.let { options -> OfficialMunicipalities(options.file("spreadsheet"), options.file("output")) }
-
-        private fun checkMunicipalitiesOrNull(arguments: List<String>): CheckMunicipalities? =
-            CommandOptions
-                .parseOrNull(
-                    arguments,
-                    required = setOf("boundaries", "official", "report"),
-                    optional = setOf("provinces"),
-                )?.let { options ->
-                    CheckMunicipalities(
-                        boundaries = options.file("boundaries"),
-                        official = options.file("official"),
-                        provinces = options.optional("provinces"),
-                        report = options.file("report"),
-                    )
-                }
-
-        private fun releaseLeftoversOrNull(arguments: List<String>): ReleaseLeftovers? =
-            CommandOptions
-                .parseOrNull(arguments, required = setOf("releases", "data-version"), optional = emptySet())
-                ?.let { options -> ReleaseLeftovers(options.file("releases"), options.required("data-version")) }
-
-        private fun obsoleteReleasesOrNull(arguments: List<String>): ObsoleteReleases? =
-            CommandOptions
-                .parseOrNull(arguments, required = setOf("releases", "keep"), optional = emptySet())
-                ?.let { options ->
-                    options.required("keep").toIntOrNull()?.let { keep ->
-                        ObsoleteReleases(options.file("releases"), keep)
-                    }
-                }
+        private val SPECIFICATIONS =
+            mapOf(
+                "provinces" to Specification(setOf("boundaries")) { Provinces(it.file("boundaries")) },
+                "region-area" to
+                    Specification(setOf("boundaries"), setOf("provinces")) {
+                        RegionArea(it.file("boundaries"), it.optional("provinces"))
+                    },
+                "build-packages" to
+                    Specification(
+                        setOf("boundaries", "places", "map", "data-version", "address-template", "output"),
+                        setOf("provinces"),
+                    ) {
+                        BuildPackages(
+                            boundaries = it.file("boundaries"),
+                            places = it.file("places"),
+                            sourceMap = it.file("map"),
+                            provinces = it.optional("provinces"),
+                            dataVersion = it.required("data-version"),
+                            addressTemplate = it.required("address-template"),
+                            output = it.file("output"),
+                        )
+                    },
+                "sign-index" to
+                    Specification(setOf("parts", "public-key", "output")) {
+                        SignIndex(it.file("parts"), it.file("public-key"), it.file("output"))
+                    },
+                "new-signing-key" to Specification(setOf("output")) { NewSigningKey(it.file("output")) },
+                "official-municipalities" to
+                    Specification(setOf("spreadsheet", "output")) {
+                        OfficialMunicipalities(it.file("spreadsheet"), it.file("output"))
+                    },
+                "check-municipalities" to
+                    Specification(setOf("boundaries", "official", "report"), setOf("provinces")) {
+                        CheckMunicipalities(
+                            it.file("boundaries"),
+                            it.file("official"),
+                            it.optional("provinces"),
+                            it.file("report"),
+                        )
+                    },
+                "release-leftovers" to
+                    Specification(setOf("releases", "data-version")) {
+                        ReleaseLeftovers(it.file("releases"), it.required("data-version"))
+                    },
+                "obsolete-releases" to
+                    Specification(setOf("releases", "keep")) { options ->
+                        options.required("keep").toIntOrNull()?.let { keep ->
+                            ObsoleteReleases(options.file("releases"), keep)
+                        }
+                    },
+            )
     }
 }
 

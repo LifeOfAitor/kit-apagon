@@ -65,6 +65,7 @@ class PackageGeneratorTest {
 
     @Test
     fun readsTheCommandsOfTheMonthlyPublication() {
+        assertEquals(GeneratorCommand.Provinces(File("b")), parse("provinces --boundaries b"))
         assertEquals(GeneratorCommand.NewSigningKey(File("keys")), parse("new-signing-key --output keys"))
         assertEquals(
             GeneratorCommand.OfficialMunicipalities(File("26codmun.xlsx"), File("municipios.csv")),

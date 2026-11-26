@@ -1,14 +1,23 @@
 package io.github.lifeofaitor.kitapagon.core.packageformat
 
-/** One file of a package as listed in the index: what to download and how to check it (decision 0013). */
+/**
+ * One file of a package as listed in the index: what to download and how to check it. The files of a
+ * province are published together in a tar, and each one is downloaded alone with a partial request
+ * (decisions 0013 and 0014).
+ */
 data class PackageFile(
     val name: String,
+    /** Position of the first byte of the file inside the resource at [urls]. */
+    val offset: Long,
     val sizeBytes: Long,
     /** Lowercase hexadecimal SHA-256 of the file. */
     val sha256: String,
     /** Mirrors to try in order; any of them serves the same bytes, checked with the SHA-256. */
     val urls: List<String>,
-)
+) {
+    /** The last byte to request, as written in an HTTP Range header. */
+    val lastByte: Long get() = offset + sizeBytes - 1
+}
 
 /** The official local name and other names people may search for, such as the Spanish one. */
 data class MunicipalityNames(

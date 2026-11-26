@@ -64,26 +64,25 @@ class GeneratorCommandRunnerTest {
 
         runner().run(buildCommand(output, sourceMapCovering(GeographicBounds(-4.0, 42.0, 0.0, 44.0)), provinces = "20"))
 
-        assertEquals(
-            listOf("ES-20045.places.json", "ES-20045.pmtiles", "index-part.json"),
-            output.list().orEmpty().sorted(),
-        )
-        val placesFile = PlacesFileParser.parse(File(output, "ES-20045.places.json").readText())
+        assertEquals(listOf("ES-20.tar", "index-part.json"), output.list().orEmpty().sorted())
+        val indexPart =
+            assertIs<PackageIndexResult.Valid>(PackageIndexParser.parse(File(output, "index-part.json").readText()))
+        val placesEntry =
+            indexPart.index.packages
+                .single()
+                .files
+                .single { it.name == "ES-20045.places.json" }
+        val placesText =
+            File(output, "ES-20.tar").readBytes().copyOfRange(
+                placesEntry.offset.toInt(),
+                placesEntry.lastByte.toInt() + 1,
+            )
+        val placesFile = PlacesFileParser.parse(placesText.decodeToString())
         assertEquals(
             listOf("Farmacia"),
             assertIs<PlacesFileResult.Valid>(placesFile).placesFile.places.map { it.details.name },
         )
-        val indexPart =
-            assertIs<PackageIndexResult.Valid>(PackageIndexParser.parse(File(output, "index-part.json").readText()))
-        assertEquals(
-            "https://example.org/2026-12-01-ES-20/ES-20045.pmtiles",
-            indexPart.index.packages
-                .single()
-                .files
-                .first()
-                .urls
-                .single(),
-        )
+        assertEquals(listOf("https://example.org/2026-12-01-ES-20/ES-20.tar"), placesEntry.urls)
         assertTrue(printed.single().startsWith("municipalities: 1\n"))
     }
 

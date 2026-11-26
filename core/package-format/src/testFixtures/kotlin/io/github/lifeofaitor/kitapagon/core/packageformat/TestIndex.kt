@@ -20,9 +20,10 @@ fun indexedPackage(
             listOf(
                 PackageFile(
                     name = "$id.pmtiles",
+                    offset = 512,
                     sizeBytes = 3_501_019,
                     sha256 = "a".repeat(SHA256_HEX_LENGTH),
-                    urls = listOf("$TEST_RELEASE_ADDRESS/$id.pmtiles"),
+                    urls = listOf("$TEST_RELEASE_ADDRESS/ES-20.tar"),
                 ),
             ),
     )

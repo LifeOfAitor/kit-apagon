@@ -13,16 +13,69 @@ class PackageGeneratorTest {
     @Test
     fun readsThePlacesCommand() {
         assertEquals(
-            PlacesCommand(File("in.geojson"), File("places.json")),
-            PlacesCommand.parse(arrayOf("places", "in.geojson", "places.json")),
+            GeneratorCommand.Places(File("in.geojson"), File("places.json")),
+            GeneratorCommand.parseOrNull(listOf("places", "in.geojson", "places.json")),
+        )
+    }
+
+    @Test
+    fun readsTheRegionAreaCommandWithOrWithoutProvinces() {
+        assertEquals(
+            GeneratorCommand.RegionArea(File("boundaries.geojsonseq"), "01,20,48"),
+            GeneratorCommand.parseOrNull(
+                listOf("region-area", "--provinces", "01,20,48", "--boundaries", "boundaries.geojsonseq"),
+            ),
+        )
+        assertEquals(
+            GeneratorCommand.RegionArea(File("boundaries.geojsonseq"), null),
+            GeneratorCommand.parseOrNull(listOf("region-area", "--boundaries", "boundaries.geojsonseq")),
+        )
+    }
+
+    @Test
+    fun readsTheBuildPackagesCommand() {
+        val arguments =
+            (
+                "build-packages --boundaries b.geojsonseq --places p.geojsonseq --map spain.pmtiles " +
+                    "--data-version 2026-12-01 --address-template https://example.org/{file} " +
+                    "--output out --provinces 20"
+            ).split(" ")
+
+        assertEquals(
+            GeneratorCommand.BuildPackages(
+                boundaries = File("b.geojsonseq"),
+                places = File("p.geojsonseq"),
+                sourceMap = File("spain.pmtiles"),
+                provinces = "20",
+                dataVersion = "2026-12-01",
+                addressTemplate = "https://example.org/{file}",
+                output = File("out"),
+            ),
+            GeneratorCommand.parseOrNull(arguments),
+        )
+    }
+
+    @Test
+    fun readsTheSignIndexCommand() {
+        assertEquals(
+            GeneratorCommand.SignIndex(File("parts"), File("published")),
+            GeneratorCommand.parseOrNull(listOf("sign-index", "--parts", "parts", "--output", "published")),
         )
     }
 
     @Test
     fun rejectsAnyOtherCommandLine() {
-        assertNull(PlacesCommand.parse(arrayOf()))
-        assertNull(PlacesCommand.parse(arrayOf("places", "only-input.geojson")))
-        assertNull(PlacesCommand.parse(arrayOf("maps", "in.geojson", "out.json")))
+        assertNull(GeneratorCommand.parseOrNull(listOf()))
+        assertNull(GeneratorCommand.parseOrNull(listOf("places", "only-input.geojson")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("maps", "in.geojson", "out.json")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("region-area")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("region-area", "--boundaries")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("region-area", "--boundaries", "--provinces")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("region-area", "boundaries", "b.geojsonseq")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("region-area", "--boundaries", "a", "--boundaries", "b")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("region-area", "--boundaries", "a", "--colour", "red")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("sign-index", "--parts", "parts")))
+        assertNull(GeneratorCommand.parseOrNull(listOf("build-packages", "--boundaries", "b")))
     }
 
     @Test

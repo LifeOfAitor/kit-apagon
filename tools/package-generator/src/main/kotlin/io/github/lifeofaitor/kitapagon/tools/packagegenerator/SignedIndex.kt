@@ -1,0 +1,64 @@
+package io.github.lifeofaitor.kitapagon.tools.packagegenerator
+
+import io.github.lifeofaitor.kitapagon.core.packageformat.IndexSignature
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndex
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexParser
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexResult
+import java.security.KeyFactory
+import java.security.PrivateKey
+import java.security.Signature
+import java.security.spec.PKCS8EncodedKeySpec
+import java.util.Base64
+
+/** Signs the index with the private key kept in the secrets of the data repository (decision 0013). */
+object IndexSigner {
+    /** Throws IllegalArgumentException when the text is not a PKCS#8 P-256 key in Base64. */
+    fun privateKeyFrom(base64Pkcs8: String): PrivateKey {
+        val keyBytes = Base64.getDecoder().decode(base64Pkcs8.trim())
+        return runCatching {
+            KeyFactory.getInstance(IndexSignature.KEY_ALGORITHM).generatePrivate(PKCS8EncodedKeySpec(keyBytes))
+        }.getOrElse { problem ->
+            throw IllegalArgumentException("The signing key is not a PKCS#8 EC private key.", problem)
+        }
+    }
+
+    fun sign(
+        indexBytes: ByteArray,
+        privateKey: PrivateKey,
+    ): ByteArray =
+        Signature.getInstance(IndexSignature.ALGORITHM).run {
+            initSign(privateKey)
+            update(indexBytes)
+            sign()
+        }
+}
+
+/**
+ * Joins the index parts written province by province into the single index the app downloads. Any
+ * doubt stops the publication, because a wrong index would reach every phone (decision 0013).
+ */
+object IndexParts {
+    /** Throws IllegalArgumentException when the parts cannot form one consistent index. */
+    fun merge(partTexts: List<String>): PackageIndex {
+        require(partTexts.isNotEmpty()) { "There are no index parts to merge." }
+        val parts = partTexts.mapIndexed(::validPartOf)
+        val dataVersions = parts.map { part -> part.dataVersion }.distinct()
+        require(dataVersions.size == 1) { "The index parts belong to different data versions: $dataVersions" }
+        val packages = parts.flatMap { part -> part.packages }.sortedBy { indexedPackage -> indexedPackage.id.value }
+        val repeatedIds = packages.groupBy { indexedPackage -> indexedPackage.id }.filterValues { it.size > 1 }.keys
+        require(repeatedIds.isEmpty()) { "These packages appear in more than one part: $repeatedIds" }
+        return PackageIndex(PackageIndex.CURRENT_FORMAT_VERSION, dataVersions.single(), packages)
+    }
+
+    private fun validPartOf(
+        position: Int,
+        partText: String,
+    ): PackageIndex {
+        val result = PackageIndexParser.parse(partText)
+        require(result is PackageIndexResult.Valid) { "Index part ${position + 1} is not a valid index: $result" }
+        require(result.skippedPackageCount == 0) {
+            "Index part ${position + 1} has ${result.skippedPackageCount} packages the app would skip."
+        }
+        return result.index
+    }
+}

@@ -17,27 +17,9 @@ La app no sustituye al 112 ni a los avisos oficiales.
 - [Licencias de terceros](docs/licencias-de-terceros.md)
 - [Mediciones en dispositivos reales](docs/mediciones.md)
 
-## Requisitos para compilar
+## Colaborar
 
-- JDK 21. Sirve el que incluye Android Studio.
-- Android SDK. Las plataformas que falten las descarga Gradle automáticamente.
-- Android Studio, solo si se quiere abrir el proyecto en el editor. Tiene que ser compatible con
-  Android Gradle Plugin 9.5.
-
-En macOS, con Android Studio instalado:
-
-```bash
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-```
-
-## Comandos
-
-| Comando | Qué hace |
-|---|---|
-| `./gradlew verifyAll` | Todas las comprobaciones obligatorias antes de integrar un cambio: formato, código limpio, emojis, Lint, tests y compilación de publicación. |
-| `./gradlew :app:assembleDebug` | Compila el APK de depuración en `app/build/outputs/apk/debug/`. |
-| `./gradlew ktlintFormat` | Corrige el formato del código automáticamente. |
-| `./gradlew :app:testDebugUnitTest :core:ui:testDebugUnitTest` | Ejecuta los tests. Cada test se ejecuta en Android 8 y en Android 16. |
+Cómo compilar, comprobar y proponer cambios: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licencia
 

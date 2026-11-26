@@ -3,10 +3,13 @@ package io.github.lifeofaitor.kitapagon.app.home
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,9 +50,22 @@ class HomeScreenTest {
         composeRule.onNodeWithText(DIALER_UNAVAILABLE_MESSAGE, substring = true).assertDoesNotExist()
     }
 
-    private fun showHomeScreen(isDialerUnavailable: Boolean) {
+    @Test
+    fun theMapButtonOpensTheMap() {
+        var mapRequests = 0
+        showHomeScreen(isDialerUnavailable = false, onOpenMap = { mapRequests++ })
+
+        composeRule.onNodeWithText("Ver el mapa").assertHasClickAction().performClick()
+
+        assertEquals(1, mapRequests)
+    }
+
+    private fun showHomeScreen(
+        isDialerUnavailable: Boolean,
+        onOpenMap: () -> Unit = {},
+    ) {
         composeRule.setContent {
-            HomeScreen(isDialerUnavailable = isDialerUnavailable, onCallEmergencyNumber = {})
+            HomeScreen(isDialerUnavailable = isDialerUnavailable, onCallEmergencyNumber = {}, onOpenMap = onOpenMap)
         }
     }
 

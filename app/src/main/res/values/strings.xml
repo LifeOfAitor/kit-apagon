@@ -3,4 +3,5 @@
     <string name="app_name">Kit Apagón</string>
     <string name="home_description">Información y herramientas para cuando no hay luz ni red.</string>
     <string name="home_dialer_unavailable">Este dispositivo no puede abrir el teléfono. Marca el 112 desde otro teléfono.</string>
+    <string name="home_open_map">Ver el mapa</string>
 </resources>

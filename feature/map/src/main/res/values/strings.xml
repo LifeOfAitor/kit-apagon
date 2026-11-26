@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_loading">Cargando el mapa…</string>
+    <string name="map_no_package_installed">Todavía no hay ningún mapa instalado en este móvil.</string>
+    <string name="map_package_damaged">El mapa %1$s está dañado y no se puede mostrar.</string>
+    <string name="map_attribution">© OpenStreetMap (ODbL) · Protomaps</string>
+</resources>

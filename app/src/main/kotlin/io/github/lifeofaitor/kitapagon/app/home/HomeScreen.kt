@@ -3,10 +3,13 @@ package io.github.lifeofaitor.kitapagon.app.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,11 +21,13 @@ import androidx.compose.ui.semantics.semantics
 import io.github.lifeofaitor.kitapagon.app.R
 import io.github.lifeofaitor.kitapagon.core.ui.component.EmergencyNumberNotice
 import io.github.lifeofaitor.kitapagon.core.ui.theme.Spacing
+import io.github.lifeofaitor.kitapagon.core.ui.theme.TouchTargets
 
 @Composable
 fun HomeScreen(
     isDialerUnavailable: Boolean,
     onCallEmergencyNumber: () -> Unit,
+    onOpenMap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
@@ -43,6 +48,7 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+            OpenMapButton(onClick = onOpenMap)
         }
     }
 }
@@ -58,4 +64,17 @@ private fun HomeHeader() {
         text = stringResource(R.string.home_description),
         style = MaterialTheme.typography.bodyLarge,
     )
+}
+
+@Composable
+private fun OpenMapButton(onClick: () -> Unit) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = TouchTargets.minimum),
+    ) {
+        Text(text = stringResource(R.string.home_open_map))
+    }
 }

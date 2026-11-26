@@ -38,8 +38,8 @@ Ver la tabla de la investigación. GitHub Releases como origen principal; répli
 1. **Identificador del paquete:** código de país ISO 3166 más el código oficial del municipio. En
    España, `ES-` seguido del código INE de 5 dígitos. Así el esquema sirve para otros países.
 2. **Contenido de cada paquete:**
-   - mapa en PMTiles del municipio más un margen alrededor (el tamaño del margen y el zoom máximo se
-     fijan tras medir);
+   - mapa en PMTiles del municipio más un margen de 3 km alrededor, con zoom máximo 14. Según las
+     mediciones, un municipio típico ocupa entre 1 y 5 MB y Madrid, el caso más grande, 17 MB;
    - puntos de interés de OpenStreetMap;
    - capa oficial del ayuntamiento, si existe, en un archivo separado (decisión 0007);
    - metadatos: nombre, fecha de los datos, fuentes y licencias.
@@ -69,6 +69,9 @@ Ver la tabla de la investigación. GitHub Releases como origen principal; répli
   réplicas (Cloudflare Pages, servidores de ayuntamientos) sin cambiar la app.
 - El generador es una pieza de software más del proyecto, con sus propios tests y revisión.
 - Atribuciones obligatorias en la app: OpenStreetMap (ODbL), IGN (CC BY 4.0), INE y cada ayuntamiento que aporte datos.
-- Pendiente de medir antes de aceptar: tamaño de los paquetes según el zoom máximo, tamaño del margen,
-  y recursos de GitHub Actions para toda España.
+- Medido: tamaños por municipio, zoom y margen en `docs/investigacion/05-paquetes-municipales-y-datos-oficiales.md`.
+  Con zoom 14 todos los paquetes caben en el límite de 25 MiB de Cloudflare Pages, y el extracto de
+  España (menos de 1,7 GB) cabe en el disco de un ejecutor de GitHub Actions.
+- Pendiente de comprobar en el prototipo: que el zoom 14 ampliado se lee bien en el Galaxy A20. Si no,
+  se sube a zoom 15 (Madrid pasaría a 42 MB y dejaría de caber en Cloudflare Pages).
 - Pendiente de comprobar: verificación de Ed25519 en API 26, de forma nativa o con una librería.

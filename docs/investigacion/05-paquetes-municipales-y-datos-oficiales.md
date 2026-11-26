@@ -71,9 +71,44 @@ Situación encontrada:
 - La mayoría de los municipios españoles son muy pequeños y no tienen técnicos de sistemas de
   información geográfica. El formato tiene que poder rellenarse con una hoja de cálculo.
 
+## Mediciones reales (2026-11-26)
+
+Medido con `pmtiles extract --dry-run` (pmtiles 1.31.2) sobre la compilación de Protomaps del
+2026-11-25 (planeta completo: 140 GB). El modo de prueba solo descarga los índices, no el mapa.
+Límites municipales obtenidos de OpenStreetMap a través de Nominatim, solo para medir.
+El margen se ha aproximado ampliando el rectángulo del municipio.
+
+| Municipio | Tipo | Exacto, zoom 15 | Exacto, zoom 14 | Exacto, zoom 13 | Margen 3 km, zoom 15 | Margen 3 km, zoom 14 |
+|---|---|---|---|---|---|---|
+| Illán de Vacas (Toledo) | Uno de los más pequeños de España | 0,9 MB | 0,9 MB | 0,9 MB | 1,2 MB | 1,0 MB |
+| Hondarribia (Gipuzkoa) | Pequeño, costero | 1,9 MB | 1,5 MB | 1,2 MB | 4,9 MB | 3,2 MB |
+| Irun (Gipuzkoa) | Mediano | 3,4 MB | 2,6 MB | 2,2 MB | 5,9 MB | 3,8 MB |
+| Tineo (Asturias) | Rural muy extenso (540 km²) | 3,6 MB | 2,7 MB | 2,1 MB | 6,6 MB | 4,4 MB |
+| Madrid | La ciudad más grande | 25 MB | 11 MB | 5,4 MB | 42 MB | 17 MB |
+
+Otras medidas:
+
+- Margen de 5 km en Irun: 8,1 MB (zoom 15) y 4,9 MB (zoom 14).
+- Hay un coste fijo de unos 0,7 MB por paquete: las teselas de poco zoom, que cubren mucha superficie.
+  Empezar en el zoom 10 deja Illán de Vacas en 0,3 MB, a cambio de no poder alejar la vista más allá de la comarca.
+- Total aproximado, sin márgenes: rectángulo de la Península y Baleares (incluye zonas de Portugal,
+  Francia y Marruecos, así que es una cota superior) 1,7 GB en zoom 14 y 3,4 GB en zoom 15;
+  Canarias 63 MB en zoom 15.
+
+Conclusiones de la medición:
+
+1. Con margen de 3 km y zoom máximo 14, un municipio típico ocupa entre 1 y 5 MB, y Madrid 17 MB.
+   Es razonable incluso con datos móviles.
+2. El zoom 15 casi triplica el tamaño en las ciudades. MapLibre puede ampliar las teselas del zoom 14
+   para ver la calle de cerca, pero hay que comprobar en el Galaxy A20 que el resultado se lee bien.
+3. Con zoom 14, todos los paquetes caben en el límite de 25 MiB de Cloudflare Pages, lo que permite usarlo como réplica.
+4. El extracto de España (menos de 1,7 GB en zoom 14) cabe con holgura en el disco de un ejecutor de GitHub Actions.
+5. El coste fijo de 0,7 MB por paquete es irrelevante para el usuario. Se mantiene el zoom mínimo en 0
+   para poder alejar la vista; se puede revisar si el total alojado crece demasiado.
+
 ## Riesgos y puntos a medir
 
-1. Tamaño real de los paquetes y del total de España según el zoom máximo.
+1. Medido: ver la sección anterior.
 2. Espacio en disco y tiempo de los ejecutores gratuitos de GitHub Actions al generar toda España.
    Probablemente haya que procesar provincia a provincia.
 3. Compatibilidad de la verificación de firmas Ed25519 con Android 8 (API 26).

@@ -43,6 +43,10 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
 - Mapas con MapLibre y PMTiles; cada usuario descarga el paquete de su municipio. Cobertura: toda
   España, sin impedir otros países (decisión 0004).
 - Guía propia con fuentes oficiales; Kiwix más adelante (decisión 0005).
+- Un paquete por municipio (código INE, margen de 3 km, zoom máximo 14), generado cada mes en GitHub
+  Actions, con índice firmado con Ed25519 y huellas SHA-256 que permiten usar réplicas (decisión 0006).
+- Datos oficiales de los ayuntamientos en GeoJSON o CSV, publicados en su dominio oficial, validados
+  automáticamente y guardados en una capa separada de OpenStreetMap (decisión 0007).
 - Dispositivo de pruebas disponible: un Samsung Galaxy A20. El emulador no sirve para probar Bluetooth.
 - El resto de decisiones, y las pendientes, están en `docs/decisiones/README.md`.
 

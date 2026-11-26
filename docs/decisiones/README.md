@@ -39,8 +39,8 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0003 | Mensajería en malla compatible con el protocolo de BitChat | Aceptada |
 | 0004 | Mapas sin conexión con MapLibre y PMTiles | Aceptada |
 | 0005 | Guía propia primero; Kiwix como ampliación posterior | Aceptada |
-| 0006 | Generación y distribución de los paquetes por municipio | Propuesta |
-| 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Propuesta |
+| 0006 | Generación y distribución de los paquetes por municipio | Aceptada |
+| 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Aceptada |
 
 ## Próximas decisiones (pendientes de investigar)
 

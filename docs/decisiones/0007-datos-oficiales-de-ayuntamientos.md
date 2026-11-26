@@ -1,6 +1,6 @@
 # 0007. Formato abierto para los datos oficiales de los ayuntamientos
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 ## Contexto
 

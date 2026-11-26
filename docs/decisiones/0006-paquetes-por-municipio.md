@@ -1,6 +1,6 @@
 # 0006. Generación y distribución de los paquetes por municipio
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 ## Contexto
 

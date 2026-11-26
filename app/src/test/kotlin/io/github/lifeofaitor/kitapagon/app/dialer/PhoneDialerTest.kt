@@ -16,7 +16,7 @@ import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
-class EmergencyDialerTest {
+class PhoneDialerTest {
     private lateinit var activity: Activity
 
     @Before
@@ -29,7 +29,7 @@ class EmergencyDialerTest {
     fun opensThePhoneAppWithTheEmergencyNumberTyped() {
         installPhoneApp()
 
-        val opened = EmergencyDialer(activity).openDialer()
+        val opened = PhoneDialer(activity).openDialer(EMERGENCY_NUMBER)
 
         assertTrue(opened)
         val startedIntent = shadowOf(activity).nextStartedActivity
@@ -38,8 +38,17 @@ class EmergencyDialerTest {
     }
 
     @Test
+    fun keepsSpacesAndThePlusSignOfAPhoneNumberFromTheMap() {
+        installPhoneApp()
+
+        PhoneDialer(activity).openDialer("+34 943 000 000")
+
+        assertEquals("+34 943 000 000", shadowOf(activity).nextStartedActivity.data?.schemeSpecificPart)
+    }
+
+    @Test
     fun reportsFailureInsteadOfCrashingWhenThereIsNoPhoneApp() {
-        val opened = EmergencyDialer(activity).openDialer()
+        val opened = PhoneDialer(activity).openDialer(EMERGENCY_NUMBER)
 
         assertFalse(opened)
         assertNull(shadowOf(activity).nextStartedActivity)

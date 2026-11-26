@@ -64,3 +64,32 @@ de gama baja suele tener menos. Antes de la demo hay que:
 1. Medirlo en el emulador configurado con 2 GB de RAM y una pantalla de gama baja.
 2. Revisar qué opciones de MapLibre reducen la memoria (caché de teselas, precarga de zooms vecinos,
    tipo de superficie de dibujo) y medir el efecto de cada una por separado.
+
+### 2026-11-26: memoria del mapa en el emulador de 2 GB
+
+Emulador Pixel 9 con Android 16 (arm64), limitado a 2 GB de memoria y con pantalla de gama baja
+(720 x 1600 a 320 ppp, ajustada con `adb shell wm size` y `wm density`). Versión de publicación, mapa
+de Irun, tres pasadas por variante: vista inicial y después de cinco dobles toques sobre el centro
+de Irun (nivel de calle). Script de medición en el historial de la sesión; se repetirá en una
+herramienta del proyecto si estas mediciones se vuelven habituales.
+
+| Variante | PSS vista inicial | PSS a nivel de calle | Memoria nativa a nivel de calle |
+|---|---|---|---|
+| Configuración actual | 96-132 MB | 117-135 MB | 94-95 MB |
+| Sin precarga de zooms vecinos (`prefetchZoomDelta = 0`) | 115-128 MB | 125-126 MB | 85-86 MB |
+| Sin caché de teselas (`tileCacheEnabled = false`) | 114-125 MB | 113-123 MB | 81-84 MB |
+
+Conclusiones:
+
+- **El emulador no contabiliza la memoria gráfica** (aparece 0 MB), que en el A51 era la parte más
+  grande (145 MB). Sus cifras no son comparables con las de un móvil real.
+- Con 2 GB y el mapa abierto, el sistema sigue en estado "normal" y la app no se cierra por falta de
+  memoria. El mapa se dibuja correctamente en la pantalla de gama baja, también en modo claro.
+- Las dos opciones de MapLibre reducen la memoria nativa alrededor de un 10 %, dentro de la variación
+  entre pasadas. Desactivar la caché obliga además a volver a leer y procesar teselas, con más gasto
+  de procesador y batería. **No se adopta ninguna** hasta medir la memoria gráfica en un móvil real
+  de gama baja; eso forma parte de la decisión pendiente 0009.
+- Se adopta sin coste: el mapa libera sus cachés cuando el sistema avisa de que queda poca memoria
+  o cuando deja de verse (`onLowMemory` de MapLibre), algo que antes no se hacía.
+- Una primera medición sin precarga se descartó porque la compilación había fallado y se midió, sin
+  saberlo, el APK anterior. El script de medición ahora solo se ejecuta si la compilación termina bien.

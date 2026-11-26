@@ -10,7 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import io.github.lifeofaitor.kitapagon.app.dialer.EmergencyDialer
+import io.github.lifeofaitor.kitapagon.app.dialer.EMERGENCY_NUMBER
+import io.github.lifeofaitor.kitapagon.app.dialer.PhoneDialer
 import io.github.lifeofaitor.kitapagon.app.home.HomeScreen
 import io.github.lifeofaitor.kitapagon.app.navigation.KitApagonNavigation
 import io.github.lifeofaitor.kitapagon.core.ui.theme.KitApagonTheme
@@ -23,13 +24,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val appContainer = AppContainer(applicationContext)
-        val emergencyDialer = EmergencyDialer(activityContext = this)
+        val phoneDialer = PhoneDialer(activityContext = this)
         setContent {
             KitApagonTheme {
                 KitApagonNavigation(
-                    homeScreen = { onOpenMap -> HomeRoute(emergencyDialer, onOpenMap) },
+                    homeScreen = { onOpenMap -> HomeRoute(phoneDialer, onOpenMap) },
                     mapScreen = {
-                        MapScreen(viewModel { MapViewModel(appContainer.installedPackages, Dispatchers.IO) })
+                        MapScreen(
+                            viewModel = viewModel { MapViewModel(appContainer.installedPackages, Dispatchers.IO) },
+                            onCallPhone = phoneDialer::openDialer,
+                        )
                     },
                 )
             }
@@ -39,13 +43,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun HomeRoute(
-    emergencyDialer: EmergencyDialer,
+    phoneDialer: PhoneDialer,
     onOpenMap: () -> Unit,
 ) {
     var isDialerUnavailable by rememberSaveable { mutableStateOf(false) }
     HomeScreen(
         isDialerUnavailable = isDialerUnavailable,
-        onCallEmergencyNumber = { isDialerUnavailable = !emergencyDialer.openDialer() },
+        onCallEmergencyNumber = { isDialerUnavailable = !phoneDialer.openDialer(EMERGENCY_NUMBER) },
         onOpenMap = onOpenMap,
     )
 }

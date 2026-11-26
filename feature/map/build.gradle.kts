@@ -11,4 +11,5 @@ dependencies {
     testImplementation(testFixtures(project(":core:package-format")))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.serialization.json)
 }

@@ -1,5 +1,9 @@
 package io.github.lifeofaitor.kitapagon.feature.map
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -60,6 +64,21 @@ class BundledMapAssetsTest {
             val style = readStyle(theme)
             assertFalse(theme.name, style.contains(TRANSLATION_BEFORE_LOCAL_NAME))
             assertTrue(theme.name, style.contains(LOCAL_NAME_BEFORE_TRANSLATION))
+        }
+    }
+
+    @Test
+    fun theBasemapDoesNotDrawTheDrinkingWaterThatTheAppDrawsItself() {
+        MapTheme.entries.forEach { theme ->
+            val poisLayer =
+                Json
+                    .parseToJsonElement(readStyle(theme))
+                    .jsonObject
+                    .getValue("layers")
+                    .jsonArray
+                    .map { layer -> layer.jsonObject }
+                    .single { layer -> layer["source-layer"]?.jsonPrimitive?.content == "pois" }
+            assertFalse(theme.name, poisLayer.getValue("filter").toString().contains("drinking_water"))
         }
     }
 

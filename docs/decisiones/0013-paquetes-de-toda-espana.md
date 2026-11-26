@@ -36,6 +36,8 @@ municipio. Ver `docs/investigacion/09-paquetes-de-toda-espana.md`.
    - extrae los límites y los lugares de toda España de una sola pasada;
    - provincia a provincia: recorta el mapa de cada municipio, reparte los lugares por rectángulo,
      elimina los lugares duplicados (un mismo sitio como punto y como edificio), publica y borra;
+     corrección del 2026-11-26 tras medirlo: solo se consideran duplicados los lugares del mismo tipo
+     y con el mismo nombre a menos de 10 m (apartado 6 de la investigación 09);
    - al final publica el índice firmado. Si cualquier paso falla, no se publica el índice y la app
      sigue viendo la versión anterior.
 5. **Repositorio de datos** `kit-apagon-datos`, público, creado por el propietario: contiene el flujo
@@ -61,5 +63,7 @@ municipio. Ver `docs/investigacion/09-paquetes-de-toda-espana.md`.
 - El propietario tiene que crear el repositorio de datos y guardar la clave privada en sus secretos;
   se le guiará paso a paso en la parte 3b.
 - Cada versión mensual ocupa del orden de 10 a 15 GB en GitHub Releases. Si GitHub lo limitara, la
-  verificación por huella permite añadir réplicas sin cambiar la app.
+  verificación por huella permite añadir réplicas sin cambiar la app. Corrección del 2026-11-26 tras
+  medirlo: unos 26 GB por versión (apartado 6 de la investigación 09). GitHub no limita el tamaño
+  total de una publicación.
 - La política de privacidad tendrá que explicar que GitHub ve la dirección IP de quien descarga.

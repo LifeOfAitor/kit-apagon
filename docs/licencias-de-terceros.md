@@ -45,14 +45,15 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | kotlin-test | 2.4.21 | Apache-2.0 | Tests |
 | kotlinx-coroutines-test | 1.10.2 | Apache-2.0 | Tests de corrutinas |
 | Turbine | 1.2.1 | Apache-2.0 | Tests de flujos de datos |
-| Kotest (solo `kotest-property`) | 6.2.7 | Apache-2.0 | Pruebas basadas en propiedades del archivo de lugares |
+| Kotest (solo `kotest-property`) | 6.2.7 | Apache-2.0 | Pruebas basadas en propiedades del formato de los paquetes y del generador |
 | Robolectric | 4.18.1 | MIT | Tests de Android sin emulador |
 | AndroidX Test (core, ext-junit) y Compose UI Test | 1.7.0, 1.3.0 y BOM | Apache-2.0 | Tests |
 | Kover | 0.9.11 | Apache-2.0 | Cobertura de tests |
 | ktlint | 1.8.0 | MIT | Formato del código |
 | detekt | 1.23.8 | Apache-2.0 | Reglas de código limpio |
 | `@protomaps/basemaps` (Node) | 5.7.2 | BSD-3-Clause | Generar los estilos del mapa (`tools/map-style`) |
-| pmtiles (línea de comandos) | 1.31.2 | BSD-3-Clause | Recortar paquetes de prueba (`scripts/install-test-package.sh`) |
+| pmtiles (línea de comandos) | 1.31.2 | BSD-3-Clause | Recortar el mapa de cada paquete (`tools/package-generator` y scripts de desarrollo) |
+| OpenSSL | 3.5.9 | Apache-2.0 | Clave temporal y comprobación independiente de la firma en `scripts/build-region-packages.sh` |
 | osmium-tool | 1.19.1 | GPL-3.0 | Recortar y filtrar los extractos de OpenStreetMap para el generador de paquetes |
 | actions/checkout | 7.0.1 | MIT | Integración continua en GitHub |
 | actions/setup-java | 6.3.0 | MIT | Integración continua en GitHub |

@@ -62,7 +62,8 @@ jobs:
         run: scripts/check-no-emoji.sh "origin/$BASE_BRANCH..HEAD"
 
       - name: Ejecutar todas las comprobaciones
-        run: ./gradlew verifyAll --console=plain
+        # Repeated only when a download fails, never when the code fails (decision 0012).
+        run: scripts/run-with-download-retries.sh ./gradlew verifyAll --console=plain
 
       - name: Detener Gradle para que la caché no guarde archivos a medio escribir
         if: always()

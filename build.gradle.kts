@@ -73,6 +73,13 @@ val noEmojiCheck =
         commandLine("scripts/check-no-emoji.sh")
     }
 
+val scriptTests =
+    tasks.register<Exec>("scriptTests") {
+        group = "verification"
+        description = "Runs the tests of the shell scripts used by the continuous integration."
+        commandLine("scripts/tests/run-with-download-retries-test.sh")
+    }
+
 tasks.register("verifyAll") {
     group = "verification"
     description = "Runs every check required before merging: format, clean code, emojis, lint, tests and release build."
@@ -80,6 +87,7 @@ tasks.register("verifyAll") {
         ktlintCheck,
         detektCheck,
         noEmojiCheck,
+        scriptTests,
         // The application lint also checks every module it depends on (checkDependencies).
         ":app:lint",
         ":app:testDebugUnitTest",

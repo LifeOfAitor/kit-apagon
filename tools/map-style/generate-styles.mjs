@@ -54,13 +54,31 @@ function preferLocalNames(node) {
   return node;
 }
 
+// The app draws its own layer of drinking water points with the other places of decision 0011, so
+// the basemap must not draw them a second time.
+const KINDS_DRAWN_BY_THE_APP = ["drinking_water"];
+
+function withoutKindsDrawnByTheApp(layer) {
+  if (layer["source-layer"] !== "pois") return layer;
+  const removeKinds = (node) => {
+    if (!Array.isArray(node)) return node;
+    if (node[0] === "literal" && Array.isArray(node[1])) {
+      return ["literal", node[1].filter((kind) => !KINDS_DRAWN_BY_THE_APP.includes(kind))];
+    }
+    return node.map(removeKinds);
+  };
+  return { ...layer, filter: removeKinds(layer.filter) };
+}
+
 function buildStyle(flavorName) {
   return {
     version: 8,
     sources: {
       protomaps: { type: "vector", url: PACKAGE_MAP_PLACEHOLDER },
     },
-    layers: preferLocalNames(layers("protomaps", namedFlavor(flavorName), { lang: LABEL_LANGUAGE })),
+    layers: preferLocalNames(layers("protomaps", namedFlavor(flavorName), { lang: LABEL_LANGUAGE })).map(
+      withoutKindsDrawnByTheApp,
+    ),
     glyphs: "asset://map/fonts/{fontstack}/{range}.pbf",
     sprite: `asset://map/sprites/${flavorName}`,
   };

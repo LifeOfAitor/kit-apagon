@@ -66,6 +66,7 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | Datos | Licencia | Cómo se cumple |
 |---|---|---|
 | Teselas de Protomaps derivadas de OpenStreetMap, en los paquetes municipales | ODbL 1.0 (obra producida) | Atribución "© OpenStreetMap (ODbL) · Protomaps" siempre visible sobre el mapa. Los paquetes no van dentro del APK: se instalan aparte. |
+| Relación de municipios del INE (`tools/package-generator/data/municipios-ine-2026.csv`), solo para comprobar que no falta ningún municipio; no llega a la app | CC BY 4.0 | El archivo y el informe de cada versión citan "Elaboración propia con datos extraídos del sitio web del INE: www.ine.es". |
 | Lugares (`places.json`) extraídos de OpenStreetMap con los extractos de Geofabrik | ODbL 1.0 (base de datos derivada) | Misma atribución visible, y cada ficha indica que el dato viene de OpenStreetMap. El generador es público, así que cualquiera puede rehacer el archivo, como exige la licencia. |
 
 ## Pendiente antes de la primera publicación

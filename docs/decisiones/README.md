@@ -47,7 +47,8 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0010 | Primer mapa sin conexión: MapLibre, estilo y recursos | Aceptada |
 | 0011 | Puntos de interés: tipos, formato y presentación | Aceptada |
 | 0012 | Repetir las comprobaciones solo cuando falla una descarga | Aceptada |
-| 0013 | Paquetes de toda España: límites, firma, publicación y descarga | Aceptada |
+| 0013 | Paquetes de toda España: límites, firma, publicación y descarga | Aceptada (publicación sustituida por la 0014) |
+| 0014 | Publicación mensual de los paquetes | Aceptada |
 
 ## Próximas decisiones (pendientes de investigar)
 

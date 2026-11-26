@@ -27,15 +27,50 @@ sealed interface GeneratorCommand {
         val output: File,
     ) : GeneratorCommand
 
-    /** Joins the index parts and signs the result with the key in [SignIndex.SIGNING_KEY_VARIABLE]. */
+    /**
+     * Joins the index parts, signs the result with the key in [SignIndex.SIGNING_KEY_VARIABLE] and
+     * checks the signature with [publicKey], the key of the app, before writing anything.
+     */
     data class SignIndex(
         val parts: File,
+        val publicKey: File,
         val output: File,
     ) : GeneratorCommand {
         companion object {
             const val SIGNING_KEY_VARIABLE = "KIT_APAGON_INDEX_SIGNING_KEY"
         }
     }
+
+    /** Creates the key pair of the index, once, in two files of [output]. */
+    data class NewSigningKey(
+        val output: File,
+    ) : GeneratorCommand
+
+    /** Once a year: converts the list of municipalities of the INE into the file kept in the repository. */
+    data class OfficialMunicipalities(
+        val spreadsheet: File,
+        val output: File,
+    ) : GeneratorCommand
+
+    /** Compares the municipalities of OpenStreetMap with the official list and writes the report. */
+    data class CheckMunicipalities(
+        val boundaries: File,
+        val official: File,
+        val provinces: String?,
+        val report: File,
+    ) : GeneratorCommand
+
+    /** Prints the releases left by a failed run of [dataVersion], to delete before starting again. */
+    data class ReleaseLeftovers(
+        val releases: File,
+        val dataVersion: String,
+    ) : GeneratorCommand
+
+    /** Prints the releases older than the last [keep] published versions. */
+    data class ObsoleteReleases(
+        val releases: File,
+        val keep: Int,
+    ) : GeneratorCommand
 
     companion object {
         val USAGE =
@@ -45,8 +80,15 @@ sealed interface GeneratorCommand {
               region-area --boundaries FILE [--provinces 01,20,48]
               build-packages --boundaries FILE --places FILE --map FILE --data-version YYYY-MM-DD
                              --address-template URL --output DIRECTORY [--provinces 01,20,48]
-              sign-index --parts DIRECTORY --output DIRECTORY   (key in ${SignIndex.SIGNING_KEY_VARIABLE})
-            Boundaries and places are osmium exports in the geojsonseq format.
+              sign-index --parts DIRECTORY --public-key FILE --output DIRECTORY
+                         (private key in the variable ${SignIndex.SIGNING_KEY_VARIABLE})
+              new-signing-key --output DIRECTORY
+              official-municipalities --spreadsheet 26codmun.xlsx --output FILE
+              check-municipalities --boundaries FILE --official FILE --report FILE [--provinces 01,20,48]
+              release-leftovers --releases FILE --data-version YYYY-MM-DD
+              obsolete-releases --releases FILE --keep 2
+            Boundaries and places are osmium exports in the geojsonseq format. Releases are the output of
+            gh release list --json tagName,isDraft,isPrerelease.
             """.trimIndent()
 
         /** Null when the arguments do not match any command of [USAGE]. */
@@ -58,6 +100,11 @@ sealed interface GeneratorCommand {
                 "region-area" -> regionAreaOrNull(rest)
                 "build-packages" -> buildPackagesOrNull(rest)
                 "sign-index" -> signIndexOrNull(rest)
+                "new-signing-key" -> newSigningKeyOrNull(rest)
+                "official-municipalities" -> officialMunicipalitiesOrNull(rest)
+                "check-municipalities" -> checkMunicipalitiesOrNull(rest)
+                "release-leftovers" -> releaseLeftoversOrNull(rest)
+                "obsolete-releases" -> obsoleteReleasesOrNull(rest)
                 else -> null
             }
         }
@@ -90,8 +137,49 @@ sealed interface GeneratorCommand {
 
         private fun signIndexOrNull(arguments: List<String>): SignIndex? =
             CommandOptions
-                .parseOrNull(arguments, required = setOf("parts", "output"), optional = emptySet())
-                ?.let { options -> SignIndex(options.file("parts"), options.file("output")) }
+                .parseOrNull(arguments, required = setOf("parts", "public-key", "output"), optional = emptySet())
+                ?.let { options ->
+                    SignIndex(options.file("parts"), options.file("public-key"), options.file("output"))
+                }
+
+        private fun newSigningKeyOrNull(arguments: List<String>): NewSigningKey? =
+            CommandOptions
+                .parseOrNull(arguments, required = setOf("output"), optional = emptySet())
+                ?.let { options -> NewSigningKey(options.file("output")) }
+
+        private fun officialMunicipalitiesOrNull(arguments: List<String>): OfficialMunicipalities? =
+            CommandOptions
+                .parseOrNull(arguments, required = setOf("spreadsheet", "output"), optional = emptySet())
+                ?.let { options -> OfficialMunicipalities(options.file("spreadsheet"), options.file("output")) }
+
+        private fun checkMunicipalitiesOrNull(arguments: List<String>): CheckMunicipalities? =
+            CommandOptions
+                .parseOrNull(
+                    arguments,
+                    required = setOf("boundaries", "official", "report"),
+                    optional = setOf("provinces"),
+                )?.let { options ->
+                    CheckMunicipalities(
+                        boundaries = options.file("boundaries"),
+                        official = options.file("official"),
+                        provinces = options.optional("provinces"),
+                        report = options.file("report"),
+                    )
+                }
+
+        private fun releaseLeftoversOrNull(arguments: List<String>): ReleaseLeftovers? =
+            CommandOptions
+                .parseOrNull(arguments, required = setOf("releases", "data-version"), optional = emptySet())
+                ?.let { options -> ReleaseLeftovers(options.file("releases"), options.required("data-version")) }
+
+        private fun obsoleteReleasesOrNull(arguments: List<String>): ObsoleteReleases? =
+            CommandOptions
+                .parseOrNull(arguments, required = setOf("releases", "keep"), optional = emptySet())
+                ?.let { options ->
+                    options.required("keep").toIntOrNull()?.let { keep ->
+                        ObsoleteReleases(options.file("releases"), keep)
+                    }
+                }
     }
 }
 

@@ -63,6 +63,23 @@ class PackageIndexFileTest {
     }
 
     @Test
+    fun skipsAPackageWhoseFileHasNoValidPositionInsideTheTar() {
+        val file = indexedPackage().files.single()
+        val negative = indexedPackage(id = "ES-20036").copy(files = listOf(file.copy(offset = -1)))
+        val withoutOffset = PackageIndexWriter.write(packageIndex(indexedPackage())).replace("\"offset\":512,", "")
+
+        assertEquals(1, skippedPackageCountOf(PackageIndexWriter.write(packageIndex(negative))))
+        assertEquals(1, skippedPackageCountOf(withoutOffset))
+    }
+
+    @Test
+    fun theLastByteToRequestIsTheOffsetPlusTheSizeMinusOne() {
+        val file = indexedPackage().files.single().copy(offset = 1_024, sizeBytes = 100)
+
+        assertEquals(1_123, file.lastByte)
+    }
+
+    @Test
     fun ignoresDownloadAddressesThatAreNotEncrypted() {
         val file = indexedPackage().files.single()
         val mixed =
@@ -114,4 +131,7 @@ class PackageIndexFileTest {
             result,
         )
     }
+
+    private fun skippedPackageCountOf(indexText: String): Int =
+        (PackageIndexParser.parse(indexText) as PackageIndexResult.Valid).skippedPackageCount
 }

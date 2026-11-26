@@ -132,21 +132,41 @@ object PackageIndexParser {
 
     private fun toFileOrNull(element: JsonElement): PackageFile? {
         val fileObject = element as? JsonObject
-        val name = fileObject?.nonBlankStringOrNull(IndexProperty.FILE_NAME)
-        val size = fileObject?.longOrNull(IndexProperty.FILE_SIZE)?.takeIf { it > 0 }
-        val sha256 = fileObject?.stringOrNull(IndexProperty.FILE_SHA256)?.takeIf { SHA256_FORMAT.matches(it) }
+        val content = fileObject?.let(::contentOf)
+        val location = fileObject?.let(::locationOf)
         val urls =
             fileObject
-                ?.stringListOrEmpty(IndexProperty.FILE_URLS)
-                ?.filter { it.startsWith(HTTPS_PREFIX) }
-                ?.takeIf { it.isNotEmpty() }
-        return if (name != null && size != null &&
-            sha256 != null
-        ) {
-            urls?.let { PackageFile(name, size, sha256, it) }
+                ?.stringListOrEmpty(
+                    IndexProperty.FILE_URLS,
+                )?.filter { it.startsWith(HTTPS_PREFIX) }
+                .orEmpty()
+        return if (content != null && location != null && urls.isNotEmpty()) {
+            PackageFile(content.name, location.offset, location.sizeBytes, content.sha256, urls)
         } else {
             null
         }
+    }
+
+    private data class FileContent(
+        val name: String,
+        val sha256: String,
+    )
+
+    private fun contentOf(fileObject: JsonObject): FileContent? {
+        val name = fileObject.nonBlankStringOrNull(IndexProperty.FILE_NAME)
+        val sha256 = fileObject.stringOrNull(IndexProperty.FILE_SHA256)?.takeIf { SHA256_FORMAT.matches(it) }
+        return if (name != null && sha256 != null) FileContent(name, sha256) else null
+    }
+
+    private data class FileLocation(
+        val offset: Long,
+        val sizeBytes: Long,
+    )
+
+    private fun locationOf(fileObject: JsonObject): FileLocation? {
+        val offset = fileObject.longOrNull(IndexProperty.FILE_OFFSET)?.takeIf { it >= 0 }
+        val size = fileObject.longOrNull(IndexProperty.FILE_SIZE)?.takeIf { it > 0 }
+        return if (offset != null && size != null) FileLocation(offset, size) else null
     }
 
     private const val BOUNDS_SIZE = 4
@@ -187,6 +207,7 @@ object PackageIndexWriter {
     private fun fileOf(file: PackageFile): JsonObject =
         buildJsonObject {
             put(IndexProperty.FILE_NAME, file.name)
+            put(IndexProperty.FILE_OFFSET, file.offset)
             put(IndexProperty.FILE_SIZE, file.sizeBytes)
             put(IndexProperty.FILE_SHA256, file.sha256)
             put(IndexProperty.FILE_URLS, stringArrayOf(file.urls))
@@ -215,6 +236,7 @@ private object IndexProperty {
     const val CENTRE = "centre"
     const val FILES = "files"
     const val FILE_NAME = "name"
+    const val FILE_OFFSET = "offset"
     const val FILE_SIZE = "size"
     const val FILE_SHA256 = "sha256"
     const val FILE_URLS = "urls"

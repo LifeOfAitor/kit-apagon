@@ -5,8 +5,10 @@ import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndex
 import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexParser
 import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexResult
 import java.security.KeyFactory
+import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.security.Signature
+import java.security.spec.ECGenParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.Base64
 
@@ -31,6 +33,36 @@ object IndexSigner {
             update(indexBytes)
             sign()
         }
+}
+
+/**
+ * Creates the key pair of the index, once: the private key goes to the secrets of the data repository
+ * and the public key into the app (decision 0013). Both are Base64 text, the form they are stored in.
+ */
+object SigningKeys {
+    const val PRIVATE_KEY_FILE_NAME = "clave-privada-del-indice.txt"
+    const val PUBLIC_KEY_FILE_NAME = "clave-publica-del-indice.txt"
+    private const val CURVE = "secp256r1"
+
+    data class EncodedKeyPair(
+        /** PKCS#8, as [IndexSigner.privateKeyFrom] reads it. */
+        val privateKey: String,
+        /** X.509 SubjectPublicKeyInfo, as IndexSignature.publicKeyFrom reads it. */
+        val publicKey: String,
+    )
+
+    fun generate(): EncodedKeyPair {
+        val keyPair =
+            KeyPairGenerator.getInstance(IndexSignature.KEY_ALGORITHM).run {
+                initialize(ECGenParameterSpec(CURVE))
+                generateKeyPair()
+            }
+        val encoder = Base64.getEncoder()
+        return EncodedKeyPair(
+            encoder.encodeToString(keyPair.private.encoded),
+            encoder.encodeToString(keyPair.public.encoded),
+        )
+    }
 }
 
 /**

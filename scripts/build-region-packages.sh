@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 # Development only: builds on this computer the packages of every municipality of a region and their
 # signed index, the same steps the monthly job of the data repository will run for all of Spain
-# (decision 0013, part 3a). Nothing is published, and the index is signed with a temporary key.
+# (decisions 0013 and 0014). Nothing is published, and the index is signed with a temporary key.
 #
 # Usage:
 #   scripts/build-region-packages.sh                                 the Basque Country (01, 20 and 48)
 #   scripts/build-region-packages.sh GEOFABRIK_REGION PROVINCES       for example europe/spain/navarra 31
 #
 # Writes to build/region-packages/:
-#   provinces/CODE/   the two files of each package and the index part of the province
-#   published/        index.json, index.json.sig and the temporary public key that checks it
+#   provinces/CODE/   the tar of the province, with the two files of each package, and its index part
+#   published/        index.json, index.json.sig, the temporary public key that checks it and the
+#                     report of the comparison with the official list of the INE
 #
-# Requires: pmtiles and osmium (brew install pmtiles osmium-tool), openssl, python3 and curl.
+# Requires: pmtiles and osmium (brew install pmtiles osmium-tool), openssl, tar, python3 and curl.
 
 set -euo pipefail
 
 readonly DEFAULT_GEOFABRIK_REGION="europe/spain/pais-vasco"
 readonly DEFAULT_PROVINCES="01,20,48"
 readonly ADDRESS_TEMPLATE="https://github.com/LifeOfAitor/kit-apagon-datos/releases/download/{data_version}-ES-{province}/{file}"
+readonly OFFICIAL_MUNICIPALITIES="tools/package-generator/data/municipios-ine-2026.csv"
 
 geofabrik_region="${1:-$DEFAULT_GEOFABRIK_REGION}"
 provinces="${2:-$DEFAULT_PROVINCES}"
@@ -49,6 +51,15 @@ export_osm_data() {
         "${working_directory}/candidates.osm.pbf" -o "${working_directory}/places.geojsonseq"
 }
 
+check_municipalities() {
+    step "Comparing the municipalities with the official list of the INE"
+    "$generator" check-municipalities \
+        --boundaries "${working_directory}/boundaries.geojsonseq" \
+        --official "${repository_directory}/${OFFICIAL_MUNICIPALITIES}" \
+        --provinces "$provinces" \
+        --report "${output_directory}/published/informe.txt"
+}
+
 # The map is cut from an archive that reaches the margins of the border municipalities
 # (docs/investigacion/09-paquetes-de-toda-espana.md).
 extract_source_map() {
@@ -76,21 +87,28 @@ build_provinces() {
     done
 }
 
-# A temporary P-256 key: the real one will only exist in the secrets of the data repository.
+# A temporary key made with the same command the owner uses once for the real one, which will only
+# exist in the secrets of the data repository.
 sign_index() {
+    local keys_directory="${working_directory}/keys"
     step "Signing the index with a temporary key"
-    openssl ecparam -name prime256v1 -genkey -noout -out "${working_directory}/signing-key.pem"
-    openssl pkey -in "${working_directory}/signing-key.pem" -pubout -out "${output_directory}/published/temporary-public-key.pem"
-    KIT_APAGON_INDEX_SIGNING_KEY="$(openssl pkcs8 -topk8 -nocrypt -outform DER -in "${working_directory}/signing-key.pem" | base64 | tr -d '\n')" \
-        "$generator" sign-index --parts "${working_directory}/parts" --output "${output_directory}/published"
+    "$generator" new-signing-key --output "$keys_directory" > /dev/null
+    cp "${keys_directory}/clave-publica-del-indice.txt" "${output_directory}/published/temporary-public-key.txt"
+    KIT_APAGON_INDEX_SIGNING_KEY="$(cat "${keys_directory}/clave-privada-del-indice.txt")" \
+        "$generator" sign-index --parts "${working_directory}/parts" \
+        --public-key "${keys_directory}/clave-publica-del-indice.txt" --output "${output_directory}/published"
 }
 
 # Checked with other tools than the ones that wrote them, as the app will check them.
 verify_output() {
     step "Checking the signature with openssl"
-    openssl dgst -sha256 -verify "${output_directory}/published/temporary-public-key.pem" \
+    openssl base64 -d -A -in "${output_directory}/published/temporary-public-key.txt" -out "${working_directory}/public-key.der"
+    openssl pkey -pubin -inform DER -in "${working_directory}/public-key.der" -out "${working_directory}/public-key.pem"
+    openssl dgst -sha256 -verify "${working_directory}/public-key.pem" \
         -signature "${output_directory}/published/index.json.sig" "${output_directory}/published/index.json"
-    step "Checking the size and SHA-256 of every file in the index"
+    step "Checking every tar with the tar tool of the system"
+    find "${output_directory}/provinces" -name '*.tar' -print0 | xargs -0 -n 1 tar -tf | wc -l | sed 's/^ */files in the tars: /'
+    step "Checking the position, size and SHA-256 of every file in the index"
     python3 -I - "${output_directory}/published/index.json" "${output_directory}/provinces" <<'PYTHON'
 import hashlib, json, os, sys
 index_path, provinces_directory = sys.argv[1], sys.argv[2]
@@ -98,10 +116,13 @@ index = json.load(open(index_path))
 checked = 0
 for package in index["packages"]:
     for listed in package["files"]:
-        path = os.path.join(provinces_directory, package["province_code"], listed["name"])
-        content = open(path, "rb").read()
+        bundle_name = listed["urls"][0].rsplit("/", 1)[1]
+        path = os.path.join(provinces_directory, package["province_code"], bundle_name)
+        with open(path, "rb") as bundle:
+            bundle.seek(listed["offset"])
+            content = bundle.read(listed["size"])
         if len(content) != listed["size"] or hashlib.sha256(content).hexdigest() != listed["sha256"]:
-            sys.exit("Mismatch in " + path)
+            sys.exit("Mismatch for " + listed["name"] + " in " + path)
         checked += 1
 print("%d files of %d packages match the index" % (checked, len(index["packages"])))
 PYTHON
@@ -115,6 +136,7 @@ main() {
     mkdir -p "${output_directory}/published"
     install_generator
     export_osm_data
+    check_municipalities
     extract_source_map
     build_provinces
     sign_index

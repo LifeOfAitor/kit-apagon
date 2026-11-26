@@ -41,7 +41,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0005 | Guía propia primero; Kiwix como ampliación posterior | Aceptada |
 | 0006 | Generación y distribución de los paquetes por municipio | Aceptada |
 | 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Aceptada |
-| 0008 | Arquitectura de la app y librerías base | Propuesta |
+| 0008 | Arquitectura de la app y librerías base | Aceptada |
 
 ## Próximas decisiones (pendientes de investigar)
 

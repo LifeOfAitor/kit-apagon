@@ -1,6 +1,6 @@
 # 0008. Arquitectura de la app y librerías base
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 ## Contexto
 

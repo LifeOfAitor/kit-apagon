@@ -22,8 +22,14 @@ import org.maplibre.geojson.Point
 
 /** The layer of places drawn on top of the basemap (decision 0011). */
 internal object PlacesLayer {
+    // MapLibre places the labels of the upper layers first. The markers go right above the names of
+    // neighbourhoods, so the names of towns, regions and countries always stay visible, while the
+    // markers win over neighbourhoods, streets and shops.
+    const val LAYER_BELOW_THE_MARKERS = "places_subplace"
+
     private const val SOURCE_ID = "kit-apagon-places"
-    private const val LAYER_ID = "kit-apagon-places"
+    private const val MAIN_LAYER_ID = "kit-apagon-places"
+    private const val DRINKING_WATER_LAYER_ID = "kit-apagon-drinking-water"
     private const val IMAGE_PROPERTY = "image"
     private const val PRIORITY_PROPERTY = "priority"
     private const val INDEX_PROPERTY = "index"
@@ -51,22 +57,35 @@ internal object PlacesLayer {
     ) {
         PlaceCategory.entries.forEach { category -> style.addImage(imageNameOf(category), markerOf(context, category)) }
         style.addSource(GeoJsonSource(SOURCE_ID, featureCollectionOf(places)))
-        style.addLayer(
-            SymbolLayer(LAYER_ID, SOURCE_ID).withProperties(
-                PropertyFactory.iconImage(Expression.get(IMAGE_PROPERTY)),
-                // Overlapping markers hide each other; the lowest priority number stays visible.
-                PropertyFactory.iconAllowOverlap(false),
-                PropertyFactory.symbolSortKey(Expression.get(PRIORITY_PROPERTY)),
-            ),
+        val drinkingWaterImage = imageNameOf(PlaceCategory.DRINKING_WATER)
+        style.addLayerAbove(
+            markerLayer(MAIN_LAYER_ID).withFilter(Expression.neq(Expression.get(IMAGE_PROPERTY), drinkingWaterImage)),
+            LAYER_BELOW_THE_MARKERS,
+        )
+        // There are hundreds of fountains; from far away they would hide the more urgent places. Added
+        // second, so it sits below the main layer and its markers give way to the others.
+        style.addLayerAbove(
+            markerLayer(DRINKING_WATER_LAYER_ID)
+                .withFilter(Expression.eq(Expression.get(IMAGE_PROPERTY), drinkingWaterImage))
+                .apply { minZoom = DRINKING_WATER_MINIMUM_ZOOM },
+            LAYER_BELOW_THE_MARKERS,
         )
     }
+
+    private fun markerLayer(layerId: String): SymbolLayer =
+        SymbolLayer(layerId, SOURCE_ID).withProperties(
+            PropertyFactory.iconImage(Expression.get(IMAGE_PROPERTY)),
+            // Overlapping markers hide each other; the lowest priority number stays visible.
+            PropertyFactory.iconAllowOverlap(false),
+            PropertyFactory.symbolSortKey(Expression.get(PRIORITY_PROPERTY)),
+        )
 
     fun placeIndexAt(
         map: MapLibreMap,
         screenPoint: PointF,
     ): Int? =
         map
-            .queryRenderedFeatures(screenPoint, LAYER_ID)
+            .queryRenderedFeatures(screenPoint, MAIN_LAYER_ID, DRINKING_WATER_LAYER_ID)
             .firstOrNull()
             ?.getNumberProperty(INDEX_PROPERTY)
             ?.toInt()
@@ -96,6 +115,7 @@ internal object PlacesLayer {
         return bitmap
     }
 
+    private const val DRINKING_WATER_MINIMUM_ZOOM = 13f
     private const val MARKER_SIZE_DP = 30
     private const val OUTLINE_WIDTH_DP = 2
     private const val GLYPH_SIZE_RATIO = 0.6f

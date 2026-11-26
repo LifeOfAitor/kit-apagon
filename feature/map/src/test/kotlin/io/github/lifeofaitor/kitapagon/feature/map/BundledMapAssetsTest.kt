@@ -83,6 +83,13 @@ class BundledMapAssetsTest {
     }
 
     @Test
+    fun theLayerThePlaceMarkersGoAboveExistsInEveryStyle() {
+        MapTheme.entries.forEach { theme ->
+            assertTrue(theme.name, readStyle(theme).contains("\"id\":\"${PlacesLayer.LAYER_BELOW_THE_MARKERS}\""))
+        }
+    }
+
+    @Test
     fun glyphsAreLoadedFromTheApp() {
         MapTheme.entries.forEach { theme ->
             assertTrue(readStyle(theme).contains("\"glyphs\":\"asset://map/fonts/{fontstack}/{range}.pbf\""))

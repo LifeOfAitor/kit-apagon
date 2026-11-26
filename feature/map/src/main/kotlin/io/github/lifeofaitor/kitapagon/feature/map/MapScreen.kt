@@ -1,5 +1,6 @@
 package io.github.lifeofaitor.kitapagon.feature.map
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -106,6 +107,7 @@ private fun ReadyContent(
     actions: MapScreenActions,
     readyMapContent: @Composable (MapScreenState.Ready, Place?) -> Unit,
 ) {
+    StepBackWithinTheMapScreen(interaction, actions)
     Column(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
         ViewModeSwitch(interaction.viewMode, actions)
         if (state.arePlacesDamaged) {
@@ -132,6 +134,19 @@ private fun ReadyContent(
             }
         }
     }
+}
+
+/** The back button first closes the details of a place, then returns from the list to the map. */
+@Composable
+private fun StepBackWithinTheMapScreen(
+    interaction: PlacesInteraction,
+    actions: MapScreenActions,
+) {
+    BackHandler(enabled = interaction.selectedPlace != null, onBack = actions.onCloseDetails)
+    BackHandler(
+        enabled = interaction.selectedPlace == null && interaction.viewMode == MapViewMode.LIST,
+        onBack = actions.onShowMap,
+    )
 }
 
 @Composable

@@ -6,6 +6,7 @@ dependencies {
     implementation(project(":core:package-format"))
     implementation(project(":core:ui"))
     implementation(libs.maplibre.android)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(testFixtures(project(":core:package-format")))

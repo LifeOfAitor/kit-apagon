@@ -10,4 +10,7 @@ application {
 dependencies {
     implementation(project(":core:package-format"))
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(testFixtures(project(":core:package-format")))
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

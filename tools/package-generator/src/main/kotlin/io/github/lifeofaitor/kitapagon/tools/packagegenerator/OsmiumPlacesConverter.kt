@@ -25,14 +25,22 @@ object OsmiumPlacesConverter {
     fun convert(osmiumGeoJson: String): List<Place> {
         val features = (Json.parseToJsonElement(osmiumGeoJson) as? JsonObject)?.get("features") as? JsonArray
         requireNotNull(features) { "The input is not a GeoJSON FeatureCollection exported by osmium." }
-        return features
+        return placesOf(features.asSequence())
+    }
+
+    /** The same for `osmium export -f geojsonseq`. Throws IllegalArgumentException when a line is not JSON. */
+    fun convertLines(osmiumFeatureLines: Sequence<String>): List<Place> =
+        placesOf(OsmiumFeatures.featuresOf(osmiumFeatureLines))
+
+    private fun placesOf(features: Sequence<JsonElement>): List<Place> =
+        features
             .mapNotNull(::toPlaceOrNull)
             .sortedWith(compareBy({ place -> place.category.ordinal }, { place -> place.sourceId }))
-    }
+            .toList()
 
     private fun toPlaceOrNull(feature: JsonElement): Place? {
         val featureObject = feature as? JsonObject ?: return null
-        val tags = tagsOf(featureObject)
+        val tags = OsmiumFeatures.tagsOf(featureObject)
         val category = OsmPlaceClassifier.categoryOf(tags)
         val location = (featureObject["geometry"] as? JsonObject)?.let(RepresentativePoint::of)?.takeIf { it.isValid }
         val sourceId = sourceIdOf(featureObject)
@@ -42,12 +50,6 @@ object OsmiumPlacesConverter {
             null
         }
     }
-
-    private fun tagsOf(feature: JsonObject): Map<String, String> =
-        (feature["properties"] as? JsonObject)
-            .orEmpty()
-            .mapNotNull { (key, value) -> (value as? JsonPrimitive)?.takeIf { it.isString }?.let { key to it.content } }
-            .toMap()
 
     // osmium writes identifiers such as "n479837125"; the package keeps the OpenStreetMap form "node/479837125".
     private fun sourceIdOf(feature: JsonObject): String? {

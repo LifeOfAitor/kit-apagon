@@ -1,6 +1,8 @@
 package io.github.lifeofaitor.kitapagon.feature.map
 
+import android.content.ComponentCallbacks2
 import android.content.Context
+import android.content.res.Configuration
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -34,6 +36,7 @@ internal fun OfflineMap(
             MapStyleTemplate.bindToMapFile(context.assets.readMapStyle(theme), state.mapFile)
         }
     val mapView = rememberMapViewFollowingLifecycle()
+    ReleaseMapMemoryWhenTheSystemIsLow(mapView)
     LaunchedEffect(mapView, styleJson) {
         mapView.getMapAsync { map -> map.showPackage(styleJson, state.bounds) }
     }
@@ -55,6 +58,37 @@ private fun rememberMapViewFollowingLifecycle(): MapView {
     }
     return mapView
 }
+
+@Composable
+private fun ReleaseMapMemoryWhenTheSystemIsLow(mapView: MapView) {
+    val context = LocalContext.current
+    DisposableEffect(context, mapView) {
+        val memoryCallbacks = MapMemoryReleaser(mapView)
+        context.registerComponentCallbacks(memoryCallbacks)
+        onDispose { context.unregisterComponentCallbacks(memoryCallbacks) }
+    }
+}
+
+private class MapMemoryReleaser(
+    private val mapView: MapView,
+) : ComponentCallbacks2 {
+    override fun onTrimMemory(level: Int) {
+        if (shouldReleaseMapMemory(level)) mapView.onLowMemory()
+    }
+
+    // Deprecated since Android 14 in favour of onTrimMemory, but still the only signal some older
+    // devices send, and the interface requires it.
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onLowMemory() {
+        mapView.onLowMemory()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) = Unit
+}
+
+/** MapLibre drops its caches when memory runs low or when the map is no longer visible. */
+@Suppress("DEPRECATION") // The running-low level is deprecated on Android 14+, yet still sent by Android 8 to 13.
+internal fun shouldReleaseMapMemory(trimLevel: Int): Boolean = trimLevel >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW
 
 private fun createOfflineMapView(context: Context): MapView {
     MapLibre.getInstance(context)

@@ -1,0 +1,32 @@
+# Only the rules that differ from the detekt defaults. The defaults apply to everything else
+# because the task runs with --build-upon-default-config.
+
+complexity:
+  LongMethod:
+    # Small functions with a single responsibility (CLAUDE.md). The default is 60.
+    threshold: 30
+
+naming:
+  FunctionNaming:
+    # Composable functions are named like types (PascalCase) by Compose convention.
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    # A number assigned to a named property is already a named constant, for example a colour.
+    ignorePropertyDeclaration: true
+  ForbiddenComment:
+    # A TODO without an associated issue is forbidden (CLAUDE.md).
+    comments:
+      - value: 'TODO:'
+        reason: 'Open an issue instead of leaving a TODO in the code.'
+      - value: 'FIXME:'
+        reason: 'Open an issue instead of leaving a FIXME in the code.'
+  UnusedPrivateMember:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+  UnusedParameter:
+    active: true
+  WildcardImport:
+    active: true

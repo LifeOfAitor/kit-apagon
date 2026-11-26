@@ -71,5 +71,5 @@ Las actualizaciones se hacen de una en una, en su propia rama y con todos los te
   camino abierto a iOS con Kotlin Multiplatform.
 - La inyección manual es más código a mano, pero sin errores ocultos que aparezcan al ejecutar.
 - detekt queda fuera de la compilación hasta que haya una versión 2.0 estable.
-- Pendiente: el tamaño del APK con MapLibre y el tiempo de arranque, medidos en el Galaxy A20.
+- Pendiente: el tamaño del APK con MapLibre y el tiempo de arranque, medidos en el móvil de pruebas (corrección del 2026-11-26: el móvil de pruebas es un Galaxy A51, no un A20).
 - Pendiente: el cifrado de la ficha médica tendrá su propia decisión cuando se diseñe esa función.

@@ -2,6 +2,8 @@
 
 Cada decisión técnica relevante tiene su propio archivo numerado (`0001-...md`).
 Una decisión aceptada no se edita: si cambia, se escribe una nueva que la sustituye y se enlazan.
+Única excepción: corregir un error de hecho que no cambia la decisión (por ejemplo, el nombre de un
+dispositivo). La corrección se hace en el mismo texto, indicando su fecha.
 
 ## Estados
 
@@ -45,6 +47,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 
 ## Próximas decisiones (pendientes de investigar)
 
-- **0009. Estrategia de pruebas con dispositivos reales.** Solo hay un móvil disponible (Samsung
-  Galaxy A20). Hay que definir qué se prueba en el emulador, qué en el A20 y cómo conseguir un
+- **0009. Estrategia de pruebas con dispositivos reales.** Solo hay un móvil disponible: un Samsung
+  Galaxy A51 con crDroid (Android 16, 4 GB de RAM). No es de gama baja ni cubre Android 8 a 11. Hay que
+  definir qué se prueba en el emulador, qué en el A51, cómo cubrir esos dos huecos y cómo conseguir un
   segundo móvil para la malla.

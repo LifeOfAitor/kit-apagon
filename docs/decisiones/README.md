@@ -48,6 +48,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0011 | Puntos de interés: tipos, formato y presentación | Aceptada |
 | 0012 | Repetir las comprobaciones solo cuando falla una descarga | Aceptada |
 | 0013 | Paquetes de toda España: límites, firma, publicación y descarga | Aceptada |
+| 0014 | Publicación mensual de los paquetes | Propuesta |
 
 ## Próximas decisiones (pendientes de investigar)
 

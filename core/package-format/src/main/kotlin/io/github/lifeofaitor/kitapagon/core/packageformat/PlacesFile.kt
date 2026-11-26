@@ -1,14 +1,11 @@
 package io.github.lifeofaitor.kitapagon.core.packageformat
 
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.put
 
 /**
@@ -50,13 +47,6 @@ object PlacesFileParser {
             else -> PlacesFileResult.Valid(placesFileOf(features))
         }
     }
-
-    private fun parseJsonOrNull(text: String): JsonElement? =
-        try {
-            Json.parseToJsonElement(text)
-        } catch (expectedForMalformedJson: SerializationException) {
-            null
-        }
 
     private fun featuresOf(root: JsonElement): JsonArray? {
         val collection = root as? JsonObject
@@ -116,13 +106,6 @@ object PlacesFileParser {
             phone = properties.nonBlankStringOrNull(PlaceProperty.PHONE),
         )
 }
-
-private fun JsonObject.stringOrNull(key: String): String? =
-    (this[key] as? JsonPrimitive)?.takeIf { primitive -> primitive.isString }?.content
-
-private fun JsonObject.nonBlankStringOrNull(key: String): String? = stringOrNull(key)?.takeIf { it.isNotBlank() }
-
-private fun JsonElement.numberOrNull(): Double? = (this as? JsonPrimitive)?.takeUnless { it.isString }?.doubleOrNull
 
 /** Writes places.json. Used by the package generator; the app only reads. */
 object PlacesFileWriter {

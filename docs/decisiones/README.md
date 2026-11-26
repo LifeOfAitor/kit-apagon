@@ -46,6 +46,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0008 | Arquitectura de la app y librerías base | Aceptada |
 | 0010 | Primer mapa sin conexión: MapLibre, estilo y recursos | Aceptada |
 | 0011 | Puntos de interés: tipos, formato y presentación | Aceptada |
+| 0012 | Repetir las comprobaciones solo cuando falla una descarga | Propuesta |
 
 ## Próximas decisiones (pendientes de investigar)
 

@@ -28,6 +28,7 @@ class GeneratorCommandRunner(
     fun run(command: GeneratorCommand) =
         when (command) {
             is GeneratorCommand.Places -> packageCommands.places(command)
+            is GeneratorCommand.Provinces -> packageCommands.provinces(command)
             is GeneratorCommand.RegionArea -> packageCommands.regionArea(command)
             is GeneratorCommand.BuildPackages -> packageCommands.buildPackages(command)
             is GeneratorCommand.SignIndex -> indexCommands.signIndex(command)

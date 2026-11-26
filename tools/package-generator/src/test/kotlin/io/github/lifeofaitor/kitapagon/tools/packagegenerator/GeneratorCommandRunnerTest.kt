@@ -48,6 +48,13 @@ class GeneratorCommandRunnerTest {
     }
 
     @Test
+    fun printsEveryProvinceWithMunicipalitiesOncePerLine() {
+        runner().run(GeneratorCommand.Provinces(boundaries))
+
+        assertEquals(listOf("20", "48"), printed)
+    }
+
+    @Test
     fun printsTheAreaTheSourceMapMustCoverRoundedOutwards() {
         runner().run(GeneratorCommand.RegionArea(boundaries, "20"))
 

@@ -52,9 +52,10 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | ktlint | 1.8.0 | MIT | Formato del código |
 | detekt | 1.23.8 | Apache-2.0 | Reglas de código limpio |
 | `@protomaps/basemaps` (Node) | 5.7.2 | BSD-3-Clause | Generar los estilos del mapa (`tools/map-style`) |
-| pmtiles (línea de comandos) | 1.31.2 | BSD-3-Clause | Recortar el mapa de cada paquete (`tools/package-generator` y scripts de desarrollo) |
+| pmtiles (línea de comandos) | 1.31.2 | BSD-3-Clause | Recortar el mapa de cada paquete (`tools/package-generator`, scripts y flujo mensual del repositorio de datos, con su huella SHA-256 fijada) |
 | OpenSSL | 3.5.9 | Apache-2.0 | Clave temporal y comprobación independiente de la firma en `scripts/build-region-packages.sh` |
-| osmium-tool | 1.19.1 | GPL-3.0 | Recortar y filtrar los extractos de OpenStreetMap para el generador de paquetes |
+| osmium-tool | 1.19.1 en local; 1.16.0, el paquete de Ubuntu 24.04, en el flujo mensual | GPL-3.0 | Recortar y filtrar los extractos de OpenStreetMap para el generador de paquetes |
+| GitHub CLI (`gh`) | la instalada en el ejecutor de GitHub | MIT | Crear, subir y borrar las publicaciones del repositorio de datos (`scripts/publish-monthly-packages.sh`) |
 | actions/checkout | 7.0.1 | MIT | Integración continua en GitHub |
 | actions/setup-java | 6.3.0 | MIT | Integración continua en GitHub |
 | actions/upload-artifact | 7.0.2 | MIT | Integración continua en GitHub |

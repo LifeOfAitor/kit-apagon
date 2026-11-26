@@ -43,12 +43,7 @@ export_osm_data() {
     local extract_file
     extract_file="$(geofabrik_extract "$geofabrik_region")"
     step "Exporting municipal boundaries and places from $(basename "$extract_file")"
-    osmium tags-filter --overwrite "$extract_file" r/boundary=administrative -o "${working_directory}/boundaries.osm.pbf"
-    osmium export --overwrite --geometry-types=polygon -f geojsonseq \
-        "${working_directory}/boundaries.osm.pbf" -o "${working_directory}/boundaries.geojsonseq"
-    filter_place_candidates "$extract_file" "${working_directory}/candidates.osm.pbf"
-    osmium export --overwrite --add-unique-id=type_id --geometry-types=point,polygon -f geojsonseq \
-        "${working_directory}/candidates.osm.pbf" -o "${working_directory}/places.geojsonseq"
+    export_generator_inputs "$extract_file" "$working_directory"
 }
 
 check_municipalities() {

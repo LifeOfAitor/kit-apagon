@@ -6,6 +6,7 @@ dependencies {
     compileOnly(libs.android.gradle.plugin)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.compose.compiler.gradle.plugin)
+    compileOnly(libs.kover.gradle.plugin)
 }
 
 gradlePlugin {
@@ -23,6 +24,13 @@ gradlePlugin {
                     .get()
                     .pluginId
             implementationClass = "io.github.lifeofaitor.kitapagon.buildlogic.AndroidLibraryConventionPlugin"
+        }
+        register("kotlinLibrary") {
+            id =
+                libs.plugins.kitapagon.kotlin.library
+                    .get()
+                    .pluginId
+            implementationClass = "io.github.lifeofaitor.kitapagon.buildlogic.KotlinLibraryConventionPlugin"
         }
     }
 }

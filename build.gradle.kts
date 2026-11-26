@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.kover) apply false
 }
 
 buildscript {
@@ -83,6 +84,9 @@ tasks.register("verifyAll") {
         ":app:lint",
         ":app:testDebugUnitTest",
         ":core:ui:testDebugUnitTest",
+        ":core:package-format:test",
+        ":core:package-format:koverVerify",
+        ":feature:map:testDebugUnitTest",
         ":app:assembleRelease",
     )
 }

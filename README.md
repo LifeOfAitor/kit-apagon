@@ -15,6 +15,7 @@ La app no sustituye al 112 ni a los avisos oficiales.
 - [Investigación](docs/investigacion/)
 - [Fuentes de los contenidos de seguridad](docs/FUENTES.md)
 - [Licencias de terceros](docs/licencias-de-terceros.md)
+- [Mediciones en dispositivos reales](docs/mediciones.md)
 
 ## Requisitos para compilar
 

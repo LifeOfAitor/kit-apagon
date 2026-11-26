@@ -28,6 +28,10 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | AndroidX Test (core, ext-junit) y Compose UI Test | 1.7.0, 1.3.0 y BOM | Apache-2.0 | Tests |
 | ktlint | 1.8.0 | MIT | Formato del código |
 | detekt | 1.23.8 | Apache-2.0 | Reglas de código limpio |
+| actions/checkout | 7.0.1 | MIT | Integración continua en GitHub |
+| actions/setup-java | 6.3.0 | MIT | Integración continua en GitHub |
+| actions/upload-artifact | 7.0.2 | MIT | Integración continua en GitHub |
+| gradle/actions (wrapper-validation y setup-gradle con la caché básica) | 6.4.1 | MIT | Integración continua en GitHub. Se usa la caché básica, de código abierto, en lugar de la propietaria que viene por defecto. |
 
 ## Datos
 

@@ -33,9 +33,12 @@ Hasta que la app pueda descargar paquetes por sí misma, el paquete de prueba se
 scripts/install-test-package.sh
 ```
 
-Recorta Irun (`ES-20045`) de la última compilación de Protomaps y lo instala en la versión de
-depuración de la app conectada por cable. Necesita `pmtiles` (`brew install pmtiles`) y `python3`.
-Para otro municipio: `scripts/install-test-package.sh IDENTIFICADOR oeste,sur,este,norte`.
+Recorta el mapa de Irun (`ES-20045`) de la última compilación de Protomaps, extrae sus lugares del
+extracto del País Vasco de Geofabrik (se guarda una semana en `~/.cache/kit-apagon/osm`), los convierte
+con el generador de paquetes y lo instala todo en la versión de depuración de la app conectada por
+cable. Necesita `pmtiles` y `osmium` (`brew install pmtiles osmium-tool`) y `python3`.
+Para otro municipio: `scripts/install-test-package.sh IDENTIFICADOR oeste,sur,este,norte REGION`,
+donde `REGION` es la ruta de Geofabrik, por ejemplo `europe/spain/madrid`.
 
 ## Regenerar el estilo del mapa
 
@@ -44,6 +47,8 @@ Solo hace falta si se cambia de versión de Protomaps o se modifica el estilo. N
 ```bash
 cd tools/map-style && npm ci && npm run generate && ./download-assets.sh
 ```
+
+Los iconos de los lugares se regeneran con `tools/map-style/download-place-icons.sh`.
 
 ## Problemas conocidos
 

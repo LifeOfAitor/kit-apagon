@@ -1,6 +1,6 @@
 # Investigación: publicación mensual de los paquetes en GitHub
 
-Fecha: 2026-11-26. Estado: primera revisión.
+Fecha: 2026-11-26. Estado: segunda revisión, con los resultados del generador (apartado 9).
 
 ## Pregunta
 
@@ -110,6 +110,26 @@ uno, cada mes se suben unos 55 archivos en lugar de 16.000.
 - Tiempo: en local, generar una provincia tarda unos 3 s y recortar su mapa unos 15 s. Falta medir la
   velocidad de subida desde GitHub Actions. La estimación es de una a dos horas, dentro del límite de
   6; hay que medirla en la primera ejecución completa.
+
+## 9. Resultados de la parte 3b-1 en local
+
+Con `scripts/build-region-packages.sh` y el País Vasco, ya con un tar por provincia:
+
+| Provincia | Municipios | Tar |
+|---|---|---|
+| Álava (01) | 51 | `ES-01.tar`, 194,7 MB |
+| Gipuzkoa (20) | 88 | `ES-20.tar`, 256,1 MB |
+| Bizkaia (48) | 113 | `ES-48.tar`, 359,3 MB |
+
+- El tar solo añade unos 0,1 MB por provincia: cabeceras de 512 bytes y relleno.
+- La relación del INE convertida por el generador tiene 8.132 municipios, la misma cifra que una
+  lectura independiente del XLSX con Python. Comparada con OpenStreetMap en el País Vasco: 252
+  municipios oficiales, ninguno sin límite y ninguno con un código desconocido.
+- Comprobaciones con herramientas distintas del generador:
+  - el `tar` del sistema lista los 504 archivos;
+  - openssl acepta la firma hecha con una clave creada por el comando `new-signing-key`;
+  - un script de Python lee cada archivo en su posición del tar y comprueba tamaño y huella.
+- El proceso completo sigue tardando menos de 30 segundos.
 
 ## Fuentes
 

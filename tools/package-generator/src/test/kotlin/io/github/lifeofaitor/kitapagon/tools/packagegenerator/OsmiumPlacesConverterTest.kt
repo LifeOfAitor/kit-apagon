@@ -95,6 +95,21 @@ class OsmiumPlacesConverterTest {
         assertFailsWith<IllegalArgumentException> { OsmiumPlacesConverter.convert("not json") }
     }
 
+    @Test
+    fun readsTheLineByLineFormatOfOsmiumWithItsRecordSeparators() {
+        val water = feature("n9", POINT, """{"amenity":"drinking_water"}""")
+        val pharmacy = feature("n8", POINT, """{"amenity":"pharmacy"}""")
+
+        val places = OsmiumPlacesConverter.convertLines(sequenceOf("\u001E$water", "", "\u001E$pharmacy"))
+
+        assertEquals(listOf("node/8", "node/9"), places.map { it.sourceId })
+    }
+
+    @Test
+    fun refusesALineThatIsNotJson() {
+        assertFailsWith<IllegalArgumentException> { OsmiumPlacesConverter.convertLines(sequenceOf("{\"type\":")) }
+    }
+
     private fun collectionOf(vararg features: String) =
         """{"type":"FeatureCollection","features":[${features.joinToString(",")}]}"""
 

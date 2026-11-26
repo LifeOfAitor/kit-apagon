@@ -55,7 +55,9 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
 - Calidad: JUnit 5 y kotlin.test en Kotlin puro, JUnit 4 con Robolectric donde Android lo exija,
   Turbine, Kotest para pruebas basadas en propiedades, objetos falsos antes que MockK, Kover, ktlint,
   Android Lint con avisos como errores y detekt 1.23.8 como herramienta independiente.
-- Dispositivo de pruebas disponible: un Samsung Galaxy A20. El emulador no sirve para probar Bluetooth.
+- Dispositivo de pruebas disponible: un Samsung Galaxy A51 con crDroid (Android 16, 4 GB de RAM). No es
+  de gama baja ni cubre Android 8 a 11 (ver `docs/mediciones.md` y la decisión pendiente 0009).
+  El emulador no sirve para probar Bluetooth.
 - El resto de decisiones, y las pendientes, están en `docs/decisiones/README.md`.
 
 ## Compilar y comprobar

@@ -100,7 +100,7 @@ Conclusiones de la medición:
 1. Con margen de 3 km y zoom máximo 14, un municipio típico ocupa entre 1 y 5 MB, y Madrid 17 MB.
    Es razonable incluso con datos móviles.
 2. El zoom 15 casi triplica el tamaño en las ciudades. MapLibre puede ampliar las teselas del zoom 14
-   para ver la calle de cerca, pero hay que comprobar en el Galaxy A20 que el resultado se lee bien.
+   para ver la calle de cerca, pero hay que comprobar en el móvil de pruebas que el resultado se lee bien.
 3. Con zoom 14, todos los paquetes caben en el límite de 25 MiB de Cloudflare Pages, lo que permite usarlo como réplica.
 4. El extracto de España (menos de 1,7 GB en zoom 14) cabe con holgura en el disco de un ejecutor de GitHub Actions.
 5. El coste fijo de 0,7 MB por paquete es irrelevante para el usuario. Se mantiene el zoom mínimo en 0

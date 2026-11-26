@@ -30,7 +30,7 @@ ligera en un móvil de 2 GB de RAM, accesible y compatible con la licencia GPL-3
   se ejecutan en el emulador.
 - Google recomienda medir el rendimiento solo con compilaciones de publicación y en dispositivos reales.
 
-Conclusión: **Compose**, con perfiles de referencia y R8, midiendo el arranque en el Galaxy A20.
+Conclusión: **Compose**, con perfiles de referencia y R8, midiendo el arranque en un móvil real.
 
 ## Mapa dentro de Compose
 
@@ -40,8 +40,8 @@ Conclusión: **Compose**, con perfiles de referencia y R8, midiendo el arranque 
 | MapLibre Compose (envoltorio para Compose Multiplatform) | BSD-3 | Versión 0.20.0, todavía no 1.0 | Descartada por ahora: no es estable. Se puede revisar cuando llegue a 1.0, porque facilitaría iOS. |
 
 La librería nativa de MapLibre es la parte más pesada de la app. Hay que distribuir un APK por
-arquitectura de procesador (ABI) y medir el tamaño real. Pendiente: comprobar la arquitectura del
-Galaxy A20 con `adb shell getprop ro.product.cpu.abilist`.
+arquitectura de procesador (ABI) y medir el tamaño real. El móvil de pruebas (Galaxy A51) es
+`arm64-v8a`, comprobado con `adb shell getprop ro.product.cpu.abilist`.
 
 ## Organización del código
 

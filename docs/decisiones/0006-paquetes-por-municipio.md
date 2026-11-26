@@ -72,6 +72,6 @@ Ver la tabla de la investigación. GitHub Releases como origen principal; répli
 - Medido: tamaños por municipio, zoom y margen en `docs/investigacion/05-paquetes-municipales-y-datos-oficiales.md`.
   Con zoom 14 todos los paquetes caben en el límite de 25 MiB de Cloudflare Pages, y el extracto de
   España (menos de 1,7 GB) cabe en el disco de un ejecutor de GitHub Actions.
-- Pendiente de comprobar en el prototipo: que el zoom 14 ampliado se lee bien en el Galaxy A20. Si no,
+- Pendiente de comprobar en el prototipo: que el zoom 14 ampliado se lee bien en el móvil de pruebas (corrección del 2026-11-26: el móvil de pruebas es un Galaxy A51, no un A20). Si no,
   se sube a zoom 15 (Madrid pasaría a 42 MB y dejaría de caber en Cloudflare Pages).
 - Pendiente de comprobar: verificación de Ed25519 en API 26, de forma nativa o con una librería.

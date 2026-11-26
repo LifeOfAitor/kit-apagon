@@ -41,11 +41,10 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0005 | Guía propia primero; Kiwix como ampliación posterior | Aceptada |
 | 0006 | Generación y distribución de los paquetes por municipio | Aceptada |
 | 0007 | Formato abierto para los datos oficiales de los ayuntamientos | Aceptada |
+| 0008 | Arquitectura de la app y librerías base | Propuesta |
 
 ## Próximas decisiones (pendientes de investigar)
 
-- **0008. Arquitectura de la app y librerías base.** Interfaz, almacenamiento local, inyección de
-  dependencias y librerías de tests, elegidas pensando en un móvil de 2 GB de RAM.
 - **0009. Estrategia de pruebas con dispositivos reales.** Solo hay un móvil disponible (Samsung
   Galaxy A20). Hay que definir qué se prueba en el emulador, qué en el A20 y cómo conseguir un
   segundo móvil para la malla.

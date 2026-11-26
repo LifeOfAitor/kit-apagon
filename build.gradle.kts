@@ -73,11 +73,25 @@ val noEmojiCheck =
         commandLine("scripts/check-no-emoji.sh")
     }
 
-val scriptTests =
-    tasks.register<Exec>("scriptTests") {
+val downloadRetriesScriptTests =
+    tasks.register<Exec>("downloadRetriesScriptTests") {
         group = "verification"
-        description = "Runs the tests of the shell scripts used by the continuous integration."
+        description = "Runs the tests of the script that repeats the checks when a download fails."
         commandLine("scripts/tests/run-with-download-retries-test.sh")
+    }
+
+val monthlyPublicationScriptTests =
+    tasks.register<Exec>("monthlyPublicationScriptTests") {
+        group = "verification"
+        description = "Runs the tests of the script that publishes the packages every month."
+        commandLine("scripts/tests/publish-monthly-packages-test.sh")
+    }
+
+val scriptTests =
+    tasks.register("scriptTests") {
+        group = "verification"
+        description = "Runs the tests of the shell scripts."
+        dependsOn(downloadRetriesScriptTests, monthlyPublicationScriptTests)
     }
 
 tasks.register("verifyAll") {

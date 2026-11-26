@@ -54,3 +54,19 @@ filter_place_candidates() {
     local output_file="$2"
     osmium tags-filter --overwrite "$input_file" nwr/amenity nwr/healthcare nwr/emergency -o "$output_file"
 }
+
+# Writes the two inputs of the generator, in the line by line format of osmium, into a directory:
+# boundaries.geojsonseq with the administrative boundaries (decision 0013) and places.geojsonseq with
+# the candidate places (decision 0011).
+export_generator_inputs() {
+    local extract_file="$1"
+    local output_directory="$2"
+    mkdir -p "$output_directory"
+    osmium tags-filter --overwrite "$extract_file" r/boundary=administrative -o "${output_directory}/boundaries.osm.pbf"
+    osmium export --overwrite --geometry-types=polygon -f geojsonseq \
+        "${output_directory}/boundaries.osm.pbf" -o "${output_directory}/boundaries.geojsonseq"
+    filter_place_candidates "$extract_file" "${output_directory}/candidates.osm.pbf"
+    osmium export --overwrite --add-unique-id=type_id --geometry-types=point,polygon -f geojsonseq \
+        "${output_directory}/candidates.osm.pbf" -o "${output_directory}/places.geojsonseq"
+    rm -f "${output_directory}/boundaries.osm.pbf" "${output_directory}/candidates.osm.pbf"
+}

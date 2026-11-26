@@ -18,14 +18,19 @@ memoria; conjuntos de iconos; mostrar solo el mapa o también una lista.
    | Tipo | Etiquetas de OpenStreetMap |
    |---|---|
    | `pharmacy` | `amenity=pharmacy` |
-   | `health_centre` | `amenity=hospital`, `amenity=clinic`, `amenity=doctors` o `healthcare=*` |
+   | `health_centre` | `amenity=hospital`, `amenity=clinic`, `amenity=doctors`, o `healthcare=hospital`, `clinic`, `doctor` o `centre`; nunca `amenity=veterinary` |
    | `drinking_water` | `amenity=drinking_water`, `amenity=water_point` |
    | `assembly_point` | `emergency=assembly_point` |
    | `defibrillator` | `emergency=defibrillator` |
    | `police` | `amenity=police` |
    | `fire_station` | `amenity=fire_station` |
 
-   Se excluye `amenity=shelter` (marquesinas). Todo lo que no encaje se descarta.
+   Se excluye `amenity=shelter` (marquesinas). Todo lo que no encaje se descarta. Una farmacia lleva
+   también `healthcare=pharmacy`: se clasifica como farmacia, no como centro sanitario.
+
+   Corrección del 2026-11-26: la primera versión decía `healthcare=*` para los centros sanitarios.
+   Con los datos de Irun eso incluía fisioterapeutas, dentistas, podólogos, un laboratorio y un
+   hospital veterinario, que no sirven en una emergencia. La lista de arriba es la correcta.
 
 2. **Archivo `places.json` en cada paquete,** junto a `map.pmtiles`: GeoJSON (RFC 7946) con solo
    puntos en WGS84 y seis decimales. Propiedades:

@@ -1,6 +1,6 @@
 # 0010. Primer mapa sin conexión: MapLibre, estilo y recursos
 
-Fecha: 2026-11-26. Estado: Propuesta.
+Fecha: 2026-11-26. Estado: Aceptada.
 
 ## Contexto
 

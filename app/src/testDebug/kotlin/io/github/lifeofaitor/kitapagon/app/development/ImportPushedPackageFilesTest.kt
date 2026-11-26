@@ -1,37 +1,39 @@
 package io.github.lifeofaitor.kitapagon.app.development
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-class ImportPushedMapsTest {
+class ImportPushedPackageFilesTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun installsAPushedMapAsAPackage() {
+    fun installsThePushedMapAndPlacesAsOnePackage() {
         val pushed = temporaryFolder.newFolder("pushed")
         val packages = temporaryFolder.newFolder("packages")
-        File(pushed, "ES-20045.pmtiles").writeText("new map")
+        File(pushed, "ES-20045.pmtiles").writeText("map")
+        File(pushed, "ES-20045.places.json").writeText("places")
 
-        importPushedMaps(pushed, packages)
+        importPushedPackageFiles(pushed, packages)
 
-        assertEquals("new map", File(packages, "ES-20045/map.pmtiles").readText())
-        assertFalse(File(pushed, "ES-20045.pmtiles").exists())
+        assertEquals("map", File(packages, "ES-20045/map.pmtiles").readText())
+        assertEquals("places", File(packages, "ES-20045/places.json").readText())
+        assertEquals(0, pushed.listFiles()?.size)
     }
 
     @Test
-    fun replacesTheMapOfAnInstalledPackage() {
+    fun replacesTheFilesOfAnInstalledPackage() {
         val pushed = temporaryFolder.newFolder("pushed")
         val packages = temporaryFolder.newFolder("packages")
         File(packages, "ES-20045").mkdirs()
         File(packages, "ES-20045/map.pmtiles").writeText("old map")
         File(pushed, "ES-20045.pmtiles").writeText("new map")
 
-        importPushedMaps(pushed, packages)
+        importPushedPackageFiles(pushed, packages)
 
         assertEquals("new map", File(packages, "ES-20045/map.pmtiles").readText())
     }
@@ -41,10 +43,11 @@ class ImportPushedMapsTest {
         val pushed = temporaryFolder.newFolder("pushed")
         val packages = temporaryFolder.newFolder("packages")
         File(pushed, "ES-20045").mkdirs()
-        File(pushed, "notes.txt").writeText("not a map")
+        File(pushed, "notes.txt").writeText("not part of a package")
 
-        importPushedMaps(pushed, packages)
+        importPushedPackageFiles(pushed, packages)
 
         assertEquals(0, packages.listFiles()?.size)
+        assertTrue(File(pushed, "notes.txt").exists())
     }
 }

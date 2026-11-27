@@ -53,6 +53,18 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 
 ## Próximas decisiones (pendientes de investigar)
 
+- **Parte 3c. Elegir y descargar el municipio en la app** (decisiones 0013 y 0014). Ya acordado o medido:
+  - la app muestra la fecha de los datos de su paquete (por ejemplo, "Datos de noviembre de 2026") y,
+    cuando hay conexión y una versión más reciente, sugiere actualizar sin hacerlo nunca por su cuenta
+    (acordado con el propietario el 2026-11-27);
+  - el índice de toda España ocupa 5,8 MB (1,5 MB con gzip): hay que decidir cómo descargarlo sin gastar
+    datos de más (apartado 11 de la investigación 10);
+  - la app exige la respuesta 206 a cada descarga parcial, y hay que comprobar con un servidor de prueba
+    que OkHttp mantiene la cabecera `Range` tras la redirección de GitHub.
+- **Paquetes de Ceuta, Casariche y Campo** (apartado 12 de la investigación 10): corregir los datos en
+  OpenStreetMap o hacer el generador tolerante a un contorno incompleto o a un nivel administrativo
+  distinto.
+
 - **0009. Estrategia de pruebas con dispositivos reales.** Solo hay un móvil disponible: un Samsung
   Galaxy A51 con crDroid (Android 16, 4 GB de RAM). No es de gama baja ni cubre Android 8 a 11. Hay que
   definir qué se prueba en el emulador, qué en el A51, cómo cubrir esos dos huecos y cómo conseguir un

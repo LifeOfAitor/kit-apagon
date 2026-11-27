@@ -68,5 +68,6 @@ municipio. Ver `docs/investigacion/09-paquetes-de-toda-espana.md`.
 - Cada versión mensual ocupa del orden de 10 a 15 GB en GitHub Releases. Si GitHub lo limitara, la
   verificación por huella permite añadir réplicas sin cambiar la app. Corrección del 2026-11-26 tras
   medirlo: unos 26 GB por versión (apartado 6 de la investigación 09). GitHub no limita el tamaño
-  total de una publicación.
+  total de una publicación. Medido en la primera versión completa, el 2026-11-27: 16,2 GB (apartado
+  13 de la investigación 10).
 - La política de privacidad tendrá que explicar que GitHub ve la dirección IP de quien descarga.

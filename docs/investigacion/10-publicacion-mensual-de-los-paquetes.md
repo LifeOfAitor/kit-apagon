@@ -1,6 +1,7 @@
 # Investigación: publicación mensual de los paquetes en GitHub
 
-Fecha: 2026-11-26. Estado: tercera revisión, con los rechazos de Geofabrik (apartado 10, 2026-11-27).
+Fecha: 2026-11-26. Estado: cuarta revisión, con los rechazos de Geofabrik y la prueba en GitHub Actions
+(apartados 10 y 11, 2026-11-27).
 
 ## Pregunta
 
@@ -146,7 +147,37 @@ segundo, en dos ejecutores distintos. No se publicó nada.
   extracto se pedía dentro de `$(...)`, donde `set -e` no detiene la función. Terminó parado en osmium,
   pero por casualidad. Corregido: cada paso de la descarga comprueba su resultado, la descarga se
   guarda con otro nombre hasta que su MD5 es correcto y un test reproduce el rechazo.
-- Pendiente: decidir cómo seguir publicando si Geofabrik rechaza a todos los ejecutores de un día.
+- Cómo seguir publicando cuando Geofabrik rechaza: decisión 0015, reintentar en días sucesivos.
+
+## 11. Prueba con Gipuzkoa en GitHub Actions
+
+2026-11-27, flujo del repositorio de datos con el generador del commit `4e62fcd`, Gipuzkoa y sin
+publicar el índice. Los dos primeros intentos fallaron porque Geofabrik rechazó la descarga (apartado
+10); el tercero, en otro ejecutor, funcionó.
+
+| Paso | Tiempo |
+|---|---|
+| Instalar herramientas y compilar el generador | 2 min |
+| Descargar España (1,5 GB) y exportar límites y lugares | 4 min 20 s |
+| Canarias | 22 s |
+| Comparar con el INE | 6 s |
+| Recortar el mapa de la provincia de la compilación de Protomaps | 15 s |
+| Generar los 88 paquetes | 12 s |
+| Crear la publicación y subir `ES-20.tar` (256 MB) | 15 s |
+| Total | 7 min 35 s |
+
+- El generador firmó el índice comprobándolo con la clave pública del repositorio de la app: el
+  secreto del repositorio de datos es el correcto.
+- INE: 88 municipios oficiales, ninguno sin límite y ninguno con un código desconocido.
+- Comprobación como la hará la app, desde fuera de GitHub Actions:
+  - openssl acepta la firma del índice descargado del borrador;
+  - los archivos de Irun, Donostia y Eskoriatza, pedidos con descargas parciales a la dirección
+    pública del tar, llegan con la respuesta 206, el rango exacto y la huella del índice.
+- Estimación para toda España: unos 5 minutos de descarga y exportación y, por provincia, entre medio
+  minuto y unos pocos minutos. Del orden de una a dos horas, dentro del límite de 6.
+- **Tamaño del índice:** 63 KB para 88 paquetes, unos 720 bytes por paquete. Para toda España serían
+  unos 5,8 MB, más que un paquete típico; con gzip, unos 1,5 MB. Hay que decidir en la parte 3c cómo lo
+  descarga la app (comprimido, por provincia u otra forma) para no gastar datos de más.
 
 ## Fuentes
 

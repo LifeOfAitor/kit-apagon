@@ -39,7 +39,10 @@ while [[ $# -gt 0 ]]; do
     [[ "$1" == "--output" ]] && output="$2"
     shift
 done
-if [[ "$url" == *builds.json ]]; then
+if [[ "$url" == *geofabrik* && "${FAKE_GEOFABRIK_REFUSES:-false}" == "true" ]]; then
+    echo "curl: (7) Failed to connect to download.geofabrik.de port 443: Couldn't connect to server" >&2
+    exit 7
+elif [[ "$url" == *builds.json ]]; then
     echo '[{"key":"20261201.pmtiles"},{"key":"20261202.pmtiles"}]'
 elif [[ "$url" == *.md5 ]]; then
     echo "$(python3 -I -c 'import hashlib; print(hashlib.md5(b"extract\n").hexdigest())')  extract.osm.pbf" > "$output"
@@ -223,6 +226,13 @@ published="${working_directory}/published"
 exit_code="$(run_script "$published" PUBLISH_INDEX=true FAKE_ALREADY_PUBLISHED=true)"
 check "a day that is already published stops before any upload" \
     bash -c "[[ $exit_code -ne 0 ]] && ! grep -q 'gh release create' '${published}/calls.log'"
+
+refused="${working_directory}/refused"
+exit_code="$(run_script "$refused" PUBLISH_INDEX=true FAKE_GEOFABRIK_REFUSES=true)"
+check "a refused download stops the run before anything is exported or published" \
+    bash -c "[[ $exit_code -ne 0 ]] && ! grep -q 'osmium' '${refused}/calls.log' && ! grep -q 'gh release create' '${refused}/calls.log'"
+check "a refused download leaves no partial extract behind" \
+    bash -c "[[ -z \"\$(find '${refused}/home' -name '*.osm.pbf*')\" ]]"
 
 broken="${working_directory}/broken"
 exit_code="$(run_script "$broken" PUBLISH_INDEX=true FAKE_FAILING_PROVINCE=48)"

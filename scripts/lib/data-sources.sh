@@ -19,21 +19,34 @@ latest_protomaps_build_url() {
 }
 
 # Prints the path of the extract of a Geofabrik region such as europe/spain/pais-vasco. Downloads it
-# when it is missing or older than a week, and checks its MD5 checksum.
+# when it is missing or older than a week, and checks its MD5 checksum before keeping it.
+# It is called inside $(...), where set -e does not stop a function, so each step checks its result.
 geofabrik_extract() {
     local region="$1"
     local region_name extract_file extract_url
     region_name="$(basename "$region")"
     extract_file="${EXTRACT_CACHE_DIRECTORY}/${region_name}-latest.osm.pbf"
     extract_url="${GEOFABRIK_BASE_URL}/${region}/${region_name}-latest.osm.pbf"
-    mkdir -p "$EXTRACT_CACHE_DIRECTORY"
+    mkdir -p "$EXTRACT_CACHE_DIRECTORY" || return 1
     if [[ -z "$(find "$extract_file" -mtime "-${EXTRACT_MAXIMUM_AGE_DAYS}" 2>/dev/null)" ]]; then
         echo "Downloading the OpenStreetMap extract ${region}" >&2
-        curl --fail --silent --show-error --location --output "$extract_file" "$extract_url"
-        curl --fail --silent --show-error --location --output "${extract_file}.md5" "${extract_url}.md5"
-        verify_md5 "$extract_file" "$(cut -d' ' -f1 "${extract_file}.md5")"
+        # A partial download never takes the place of a good extract.
+        download "$extract_url" "${extract_file}.part" || return 1
+        download "${extract_url}.md5" "${extract_file}.md5" || return 1
+        verify_md5 "${extract_file}.part" "$(cut -d' ' -f1 "${extract_file}.md5")" || return 1
+        mv "${extract_file}.part" "$extract_file" || return 1
     fi
     echo "$extract_file"
+}
+
+# Also repeats refused connections, which curl does not repeat by default: Geofabrik sometimes refuses
+# the shared addresses of GitHub runners (docs/investigacion/10-publicacion-mensual-de-los-paquetes.md).
+download() {
+    local url="$1"
+    local output_file="$2"
+    curl --fail --silent --show-error --location --retry 3 --retry-connrefused \
+        --retry-delay "${DOWNLOAD_RETRY_DELAY_SECONDS:-30}" --output "$output_file" "$url" \
+        || { echo "Could not download ${url}" >&2; return 1; }
 }
 
 verify_md5() {

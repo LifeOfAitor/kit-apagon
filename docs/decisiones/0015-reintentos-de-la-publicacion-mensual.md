@@ -1,6 +1,6 @@
 # 0015. Reintentos de la publicación mensual cuando Geofabrik rechaza la descarga
 
-Fecha: 2026-11-27. Estado: Propuesta.
+Fecha: 2026-11-27. Estado: Aceptada.
 
 Completa la decisión 0014. El resto de la 0014 sigue vigente.
 

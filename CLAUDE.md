@@ -48,8 +48,10 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
   códigos de OpenStreetMap, firma ECDSA P-256 (Ed25519 no existe de serie en Android 8) y publicación
   desde el repositorio `kit-apagon-datos` (decisión 0013). Un tar sin comprimir por provincia y
   descargas parciales: el índice da la posición de cada archivo dentro del tar (decisión 0014).
-  La clave pública del índice está en `tools/package-generator/data/`; la privada nunca se guarda en un
-  repositorio: solo en el secreto de `kit-apagon-datos` y en el gestor de contraseñas del propietario.
+  El trabajo programado se ejecuta los días 2 a 8 y no hace nada si el mes ya está publicado
+  (decisión 0015). La clave pública del índice está en `tools/package-generator/data/`; la privada
+  nunca se guarda en un repositorio: solo en el secreto de `kit-apagon-datos` y en el gestor de
+  contraseñas del propietario.
 - Datos oficiales de los ayuntamientos en GeoJSON o CSV, publicados en su dominio oficial, validados
   automáticamente y guardados en una capa separada de OpenStreetMap (decisión 0007).
 - Lugares del municipio en `places.json` dentro de cada paquete, leídos a memoria; Room solo para los

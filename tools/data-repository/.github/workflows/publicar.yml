@@ -6,8 +6,9 @@ name: Publicar los paquetes
 
 on:
   schedule:
-    # Day 2 of every month at 03:00 UTC.
-    - cron: "0 3 2 * *"
+    # Days 2 to 8 of every month at 03:00 UTC. Geofabrik refuses some GitHub runners, and each day is
+    # another runner; once the month is published, the following days stop early (decision 0015).
+    - cron: "0 3 2-8 * *"
   workflow_dispatch:
     inputs:
       provincias:
@@ -20,7 +21,7 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: publicar
@@ -34,11 +35,47 @@ env:
   PMTILES_SHA256: 3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f
 
 jobs:
+  comprobar:
+    name: Comprobar si el mes ya está publicado
+    # Manual runs are on purpose, such as a trial or an extra version after a fix: they skip the check.
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      publicado: ${{ steps.comprobacion.outputs.publicado }}
+    steps:
+      - name: Descargar el script de la comprobación
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: LifeOfAitor/kit-apagon
+          ref: ${{ env.GENERATOR_COMMIT }}
+          path: generador
+          persist-credentials: false
+          sparse-checkout: scripts
+
+      - name: Comprobar
+        id: comprobacion
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DATA_REPOSITORY: ${{ github.repository }}
+        # On its own line, so that a failure of the check stops the run instead of reading as "false".
+        run: |
+          published="$(generador/scripts/month-is-published.sh)"
+          echo "publicado=${published}" >> "$GITHUB_OUTPUT"
+          echo "Publicado este mes: ${published}"
+
   publicar:
     name: Generar y publicar
+    needs: comprobar
+    # Runs when the check was skipped (a manual run) or found nothing published this month.
+    if: >-
+      !cancelled() && (needs.comprobar.result == 'skipped' ||
+      (needs.comprobar.result == 'success' && needs.comprobar.outputs.publicado == 'false'))
     runs-on: ubuntu-24.04
     # Under the 6 hours GitHub allows, so that a stuck run ends before the limit cuts it.
     timeout-minutes: 345
+    permissions:
+      contents: write
     steps:
       - name: Descargar este repositorio
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

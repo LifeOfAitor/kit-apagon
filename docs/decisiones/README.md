@@ -49,6 +49,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0012 | Repetir las comprobaciones solo cuando falla una descarga | Aceptada |
 | 0013 | Paquetes de toda España: límites, firma, publicación y descarga | Aceptada (publicación sustituida por la 0014) |
 | 0014 | Publicación mensual de los paquetes | Aceptada |
+| 0015 | Reintentos de la publicación mensual cuando Geofabrik rechaza la descarga | Aceptada |
 
 ## Próximas decisiones (pendientes de investigar)
 

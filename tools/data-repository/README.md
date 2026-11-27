@@ -4,6 +4,12 @@ Paquetes municipales de la app [Kit Apagón](https://github.com/LifeOfAitor/kit-
 lugares útiles de cada municipio de España, para usarlos sin conexión durante un apagón. Se generan y
 se publican solos cada mes con el flujo `.github/workflows/publicar.yml`.
 
+El flujo se ejecuta los días 2 a 8 de cada mes. Geofabrik, de donde salen los datos de OpenStreetMap,
+rechaza a veces a los ejecutores de GitHub; cada día es otro ejecutor, y en cuanto un día publica, los
+siguientes terminan sin hacer nada. Un aviso de fallo uno de esos días no requiere hacer nada si el día
+siguiente funciona. Si fallan los siete, ese mes no se publica y los móviles siguen con la versión
+anterior, que sigue siendo válida.
+
 ## Cómo los usa la app
 
 1. Descarga `index.json` y su firma, `index.json.sig`, de la última publicación:

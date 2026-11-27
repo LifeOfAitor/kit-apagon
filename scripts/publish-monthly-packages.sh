@@ -101,11 +101,13 @@ clean_leftovers() {
 }
 
 prepare_inputs() {
-    local region region_directory
+    local region region_directory extract_file
     for region in "$SPAIN_EXTRACT" "$CANARY_ISLANDS_EXTRACT"; do
         region_directory="${work_directory}/$(basename "$region")"
+        # Assigned on its own line so that a failed download stops the script here.
+        extract_file="$(geofabrik_extract "$region")"
         step "Exporting boundaries and places of ${region}"
-        export_generator_inputs "$(geofabrik_extract "$region")" "$region_directory"
+        export_generator_inputs "$extract_file" "$region_directory"
     done
     cat "${work_directory}/spain/boundaries.geojsonseq" "${work_directory}/canary-islands/boundaries.geojsonseq" \
         > "${work_directory}/boundaries.geojsonseq"

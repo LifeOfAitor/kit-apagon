@@ -195,6 +195,8 @@ check "it publishes each province as a prerelease with its tar" \
     grep -q -- "gh release create ${VERSION}-ES-48 --repo LifeOfAitor/kit-apagon-datos --prerelease" "$log"
 check "it repeats a failed upload" \
     test "$(grep -c "gh release upload ${VERSION}-ES-20 " "$log")" -eq 2
+check "only the municipalities of the official list of the INE get a package" \
+    bash -c "grep 'generator provinces ' '$log' | grep -q -- '--official .*municipios-ine-2026.csv' && grep 'generator build-packages ' '$log' | grep -q -- '--official .*municipios-ine-2026.csv'"
 check "the map of each province is cut from the build of the day" \
     grep -q -- "pmtiles extract https://build.protomaps.com/20261202.pmtiles" "$log"
 check "it signs the index with the public key of the app" \

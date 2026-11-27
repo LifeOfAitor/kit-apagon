@@ -32,7 +32,23 @@ class GeneratorCommandRunnerTest {
                 listOf(
                     boundaryLine(irunBounds, municipalityTags("20045", "Irun", "name:es" to "Irún")),
                     boundaryLine(GeographicBounds(-2.98, 43.21, -2.88, 43.29), municipalityTags("48020", "Bilbao")),
+                    // Lands shared by two municipalities, tagged like one in OpenStreetMap, with a code
+                    // the INE does not have.
+                    boundaryLine(
+                        GeographicBounds(-5.70, 42.32, -5.62, 42.36),
+                        municipalityTags("53053", "Comunidad de Soto de la Vega y Villazala"),
+                    ),
                 ).joinToString("\n"),
+            )
+        }
+    }
+
+    private val official by lazy {
+        File(temporaryDirectory, "municipios.csv").apply {
+            writeText(
+                OfficialMunicipalitiesFile.write(
+                    listOf(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("48020", "Bilbao")),
+                ),
             )
         }
     }
@@ -49,14 +65,14 @@ class GeneratorCommandRunnerTest {
 
     @Test
     fun printsEveryProvinceWithMunicipalitiesOncePerLine() {
-        runner().run(GeneratorCommand.Provinces(boundaries))
+        runner().run(GeneratorCommand.Provinces(boundaries, official))
 
         assertEquals(listOf("20", "48"), printed)
     }
 
     @Test
     fun printsTheAreaTheSourceMapMustCoverRoundedOutwards() {
-        runner().run(GeneratorCommand.RegionArea(boundaries, "20"))
+        runner().run(GeneratorCommand.RegionArea(boundaries, official, "20"))
 
         val expected = irunBounds.expandedBy(3.0)
         val printedArea = printed.single().split(",").map(String::toDouble)
@@ -121,10 +137,27 @@ class GeneratorCommandRunnerTest {
     }
 
     @Test
+    fun onlyTheMunicipalitiesOfTheOfficialListGetAPackage() {
+        val output = File(temporaryDirectory, "out")
+
+        runner().run(buildCommand(output, sourceMapCovering(GeographicBounds(-6.0, 42.0, 0.0, 44.0))))
+
+        val indexPart =
+            assertIs<PackageIndexResult.Valid>(PackageIndexParser.parse(File(output, "index-part.json").readText()))
+        assertEquals(listOf("ES-20045", "ES-48020"), indexPart.index.packages.map { it.id.value })
+        assertEquals(listOf("ES-20.tar", "ES-48.tar", "index-part.json"), output.list().orEmpty().sorted())
+        assertFailsWith<IllegalArgumentException> {
+            runner().run(
+                GeneratorCommand.RegionArea(boundaries, official, "53"),
+            )
+        }
+    }
+
+    @Test
     fun refusesBoundariesWithoutMunicipalities() {
         val empty = File(temporaryDirectory, "empty.geojsonseq").apply { writeText("") }
 
-        assertFailsWith<IllegalArgumentException> { runner().run(GeneratorCommand.RegionArea(empty, null)) }
+        assertFailsWith<IllegalArgumentException> { runner().run(GeneratorCommand.RegionArea(empty, official, null)) }
     }
 
     @Test
@@ -229,6 +262,7 @@ class GeneratorCommandRunnerTest {
         provinces: String? = null,
     ) = GeneratorCommand.BuildPackages(
         boundaries = boundaries,
+        official = official,
         places = places,
         sourceMap = sourceMap,
         provinces = provinces,

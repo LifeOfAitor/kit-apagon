@@ -53,12 +53,41 @@ object ProvinceSelection {
         return codes
     }
 
-    /** Throws IllegalArgumentException for a malformed code or a province without municipalities. */
+    /**
+     * Only the municipalities of the official list of the INE get a package. OpenStreetMap also has
+     * lands shared by two municipalities at the same level, with codes the INE does not have, such as
+     * the Comunidad de Soto de la Vega y Villazala with 53053 (docs/investigacion/10).
+     */
+    fun officialMunicipalitiesOf(
+        boundaries: File,
+        official: File,
+        provinces: String?,
+    ): List<Municipality> {
+        val officialCodes = OfficialMunicipalitiesFile.read(official.readText()).map { it.code }.toSet()
+        return selectionOf(
+            readMunicipalities(boundaries).filter {
+                it.id.value.removePrefix("ES-") in officialCodes
+            },
+            boundaries,
+            provinces,
+        )
+    }
+
+    /** Every municipality in the boundaries, also the ones the official list does not have. */
     fun municipalitiesOf(
         boundaries: File,
         provinces: String?,
+    ): List<Municipality> = selectionOf(readMunicipalities(boundaries), boundaries, provinces)
+
+    private fun readMunicipalities(boundaries: File): List<Municipality> =
+        boundaries.useLines { lines -> MunicipalityReader.read(lines) }
+
+    /** Throws IllegalArgumentException for a malformed code or a province without municipalities. */
+    private fun selectionOf(
+        municipalities: List<Municipality>,
+        boundaries: File,
+        provinces: String?,
     ): List<Municipality> {
-        val municipalities = boundaries.useLines { lines -> MunicipalityReader.read(lines) }
         val wanted = codesOf(provinces)
         if (wanted == null) {
             require(municipalities.isNotEmpty()) { "There are no municipalities in $boundaries." }

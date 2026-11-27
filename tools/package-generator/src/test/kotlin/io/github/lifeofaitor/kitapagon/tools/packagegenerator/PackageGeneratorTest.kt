@@ -21,22 +21,21 @@ class PackageGeneratorTest {
     @Test
     fun readsTheRegionAreaCommandWithOrWithoutProvinces() {
         assertEquals(
-            GeneratorCommand.RegionArea(File("boundaries.geojsonseq"), "01,20,48"),
-            GeneratorCommand.parseOrNull(
-                listOf("region-area", "--provinces", "01,20,48", "--boundaries", "boundaries.geojsonseq"),
-            ),
+            GeneratorCommand.RegionArea(File("b.geojsonseq"), File("o.csv"), "01,20,48"),
+            parse("region-area --provinces 01,20,48 --official o.csv --boundaries b.geojsonseq"),
         )
         assertEquals(
-            GeneratorCommand.RegionArea(File("boundaries.geojsonseq"), null),
-            GeneratorCommand.parseOrNull(listOf("region-area", "--boundaries", "boundaries.geojsonseq")),
+            GeneratorCommand.RegionArea(File("b.geojsonseq"), File("o.csv"), null),
+            parse("region-area --boundaries b.geojsonseq --official o.csv"),
         )
+        assertNull(parse("region-area --boundaries b.geojsonseq"))
     }
 
     @Test
     fun readsTheBuildPackagesCommand() {
         val arguments =
             (
-                "build-packages --boundaries b.geojsonseq --places p.geojsonseq --map spain.pmtiles " +
+                "build-packages --boundaries b.geojsonseq --official o.csv --places p.geojsonseq --map spain.pmtiles " +
                     "--data-version 2026-12-01 --address-template https://example.org/{file} " +
                     "--output out --provinces 20"
             ).split(" ")
@@ -44,6 +43,7 @@ class PackageGeneratorTest {
         assertEquals(
             GeneratorCommand.BuildPackages(
                 boundaries = File("b.geojsonseq"),
+                official = File("o.csv"),
                 places = File("p.geojsonseq"),
                 sourceMap = File("spain.pmtiles"),
                 provinces = "20",
@@ -65,7 +65,10 @@ class PackageGeneratorTest {
 
     @Test
     fun readsTheCommandsOfTheMonthlyPublication() {
-        assertEquals(GeneratorCommand.Provinces(File("b")), parse("provinces --boundaries b"))
+        assertEquals(
+            GeneratorCommand.Provinces(File("b"), File("o.csv")),
+            parse("provinces --boundaries b --official o.csv"),
+        )
         assertEquals(GeneratorCommand.NewSigningKey(File("keys")), parse("new-signing-key --output keys"))
         assertEquals(
             GeneratorCommand.OfficialMunicipalities(File("26codmun.xlsx"), File("municipios.csv")),

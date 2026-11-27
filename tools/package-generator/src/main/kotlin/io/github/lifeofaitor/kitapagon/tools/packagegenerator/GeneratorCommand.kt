@@ -13,17 +13,20 @@ sealed interface GeneratorCommand {
     /** Prints the code of every province with municipalities in the boundaries, one per line. */
     data class Provinces(
         val boundaries: File,
+        val official: File,
     ) : GeneratorCommand
 
     /** Prints the rectangle the source map has to cover so that every package has its margin. */
     data class RegionArea(
         val boundaries: File,
+        val official: File,
         val provinces: String?,
     ) : GeneratorCommand
 
     /** Writes the packages of a set of provinces and the index part that describes them. */
     data class BuildPackages(
         val boundaries: File,
+        val official: File,
         val places: File,
         val sourceMap: File,
         val provinces: String?,
@@ -82,10 +85,11 @@ sealed interface GeneratorCommand {
             """
             Usage:
               places OSMIUM_GEOJSON_INPUT PLACES_JSON_OUTPUT
-              provinces --boundaries FILE
-              region-area --boundaries FILE [--provinces 01,20,48]
-              build-packages --boundaries FILE --places FILE --map FILE --data-version YYYY-MM-DD
-                             --address-template URL --output DIRECTORY [--provinces 01,20,48]
+              provinces --boundaries FILE --official FILE
+              region-area --boundaries FILE --official FILE [--provinces 01,20,48]
+              build-packages --boundaries FILE --official FILE --places FILE --map FILE
+                             --data-version YYYY-MM-DD --address-template URL --output DIRECTORY
+                             [--provinces 01,20,48]
               sign-index --parts DIRECTORY --public-key FILE --output DIRECTORY
                          (private key in the variable ${SignIndex.SIGNING_KEY_VARIABLE})
               new-signing-key --output DIRECTORY
@@ -93,7 +97,8 @@ sealed interface GeneratorCommand {
               check-municipalities --boundaries FILE --official FILE --report FILE [--provinces 01,20,48]
               release-leftovers --releases FILE --data-version YYYY-MM-DD
               obsolete-releases --releases FILE --keep 2
-            Boundaries and places are osmium exports in the geojsonseq format. Releases are the output of
+            Boundaries and places are osmium exports in the geojsonseq format. Official is the list of
+            municipalities of the INE kept in tools/package-generator/data: only its municipalities get a package. Releases are the output of
             gh release list --json tagName,isDraft,isPrerelease.
             """.trimIndent()
 
@@ -134,18 +139,22 @@ sealed interface GeneratorCommand {
 
         private val SPECIFICATIONS =
             mapOf(
-                "provinces" to Specification(setOf("boundaries")) { Provinces(it.file("boundaries")) },
+                "provinces" to
+                    Specification(
+                        setOf("boundaries", "official"),
+                    ) { Provinces(it.file("boundaries"), it.file("official")) },
                 "region-area" to
-                    Specification(setOf("boundaries"), setOf("provinces")) {
-                        RegionArea(it.file("boundaries"), it.optional("provinces"))
+                    Specification(setOf("boundaries", "official"), setOf("provinces")) {
+                        RegionArea(it.file("boundaries"), it.file("official"), it.optional("provinces"))
                     },
                 "build-packages" to
                     Specification(
-                        setOf("boundaries", "places", "map", "data-version", "address-template", "output"),
+                        setOf("boundaries", "official", "places", "map", "data-version", "address-template", "output"),
                         setOf("provinces"),
                     ) {
                         BuildPackages(
                             boundaries = it.file("boundaries"),
+                            official = it.file("official"),
                             places = it.file("places"),
                             sourceMap = it.file("map"),
                             provinces = it.optional("provinces"),

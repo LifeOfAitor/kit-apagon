@@ -82,13 +82,17 @@ list_releases() {
     gh release list --repo "$DATA_REPOSITORY" --limit 1000 --json tagName,isDraft,isPrerelease > "$1"
 }
 
-# Reads one tag per line and deletes each release with its tag.
+# Reads one tag per line and deletes each release, and its tag when it has one: GitHub creates the tag
+# of a draft only when it is published, and refuses to delete a tag that does not exist.
 delete_releases() {
     local tag
     while IFS= read -r tag; do
         [[ -n "$tag" ]] || continue
         step "Deleting release ${tag}"
-        gh release delete "$tag" --repo "$DATA_REPOSITORY" --cleanup-tag --yes
+        gh release delete "$tag" --repo "$DATA_REPOSITORY" --yes
+        if gh api "repos/${DATA_REPOSITORY}/git/ref/tags/${tag}" > /dev/null 2>&1; then
+            gh api --method DELETE "repos/${DATA_REPOSITORY}/git/refs/tags/${tag}" > /dev/null
+        fi
     done
 }
 

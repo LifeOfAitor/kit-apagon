@@ -22,7 +22,7 @@ class PackageCommands(
 
     fun provinces(command: GeneratorCommand.Provinces) {
         ProvinceSelection
-            .municipalitiesOf(command.boundaries, provinces = null)
+            .officialMunicipalitiesOf(command.boundaries, command.official, provinces = null)
             .map { municipality -> municipality.provinceCode }
             .distinct()
             .sorted()
@@ -30,14 +30,24 @@ class PackageCommands(
     }
 
     fun regionArea(command: GeneratorCommand.RegionArea) {
-        val municipalities = ProvinceSelection.municipalitiesOf(command.boundaries, command.provinces)
+        val municipalities =
+            ProvinceSelection.officialMunicipalitiesOf(
+                command.boundaries,
+                command.official,
+                command.provinces,
+            )
         print(outwardRounded(regionAreaOf(municipalities)))
     }
 
     fun buildPackages(command: GeneratorCommand.BuildPackages) {
         require(DataVersion.isValid(command.dataVersion)) { "The data version must be a date such as 2026-12-01." }
         val addressTemplate = DownloadAddressTemplate(command.addressTemplate)
-        val municipalities = ProvinceSelection.municipalitiesOf(command.boundaries, command.provinces)
+        val municipalities =
+            ProvinceSelection.officialMunicipalitiesOf(
+                command.boundaries,
+                command.official,
+                command.provinces,
+            )
         SourceMapCoverage.check(PmtilesHeaderReader.read(command.sourceMap), regionAreaOf(municipalities))
         val places = command.places.useLines { lines -> OsmiumPlacesConverter.convertLines(lines) }
         val built =

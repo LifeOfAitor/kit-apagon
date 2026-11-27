@@ -24,7 +24,10 @@ municipio. Ver `docs/investigacion/09-paquetes-de-toda-espana.md`.
 
 1. **Municipios:** relaciones de OpenStreetMap con `boundary=administrative`, `admin_level=8` y un
    `ine:municipio` de cinco cifras. Se descarta todo lo demás. El generador compara la lista con la
-   relación oficial del INE y avisa de los municipios que falten.
+   relación oficial del INE y avisa de los municipios que falten. Corrección del 2026-11-27 tras
+   comparar toda España: solo tienen paquete los municipios de la relación oficial, porque
+   OpenStreetMap etiqueta igual algunas tierras compartidas por dos municipios, con códigos que el INE
+   no tiene (apartado 12 de la investigación 10).
 2. **Firma:** ECDSA con la curva P-256 y SHA-256 (`SHA256withECDSA`). La clave privada solo existe en
    los secretos del repositorio de datos; la clave pública va dentro de la app.
 3. **Índice** (`index.json`, con su firma en `index.json.sig`): versión del formato, fecha de los datos y,

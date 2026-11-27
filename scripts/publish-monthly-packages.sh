@@ -131,7 +131,7 @@ provinces_to_build() {
     if [[ -n "${PROVINCES:-}" ]]; then
         tr ',' '\n' <<< "$PROVINCES"
     else
-        "$generator" provinces --boundaries "${work_directory}/boundaries.geojsonseq"
+        "$generator" provinces --boundaries "${work_directory}/boundaries.geojsonseq" --official "$official_municipalities"
     fi
 }
 
@@ -162,12 +162,14 @@ publish_province() {
     local tag="${data_version}-ES-${province}"
     local output_directory="${work_directory}/provinces/${province}"
     local province_area
-    province_area="$("$generator" region-area --boundaries "${work_directory}/boundaries.geojsonseq" --provinces "$province")"
+    province_area="$("$generator" region-area --boundaries "${work_directory}/boundaries.geojsonseq" \
+        --official "$official_municipalities" --provinces "$province")"
     step "Province ${province}: map of ${province_area}"
     with_retries extract_province_map "$build_url" "$province_area"
     step "Province ${province}: packages"
     "$generator" build-packages \
         --boundaries "${work_directory}/boundaries.geojsonseq" \
+        --official "$official_municipalities" \
         --places "${work_directory}/places.geojsonseq" \
         --map "${work_directory}/source.pmtiles" \
         --provinces "$province" \

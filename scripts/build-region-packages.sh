@@ -59,7 +59,8 @@ check_municipalities() {
 # (docs/investigacion/09-paquetes-de-toda-espana.md).
 extract_source_map() {
     local region_area build_url
-    region_area="$("$generator" region-area --boundaries "${working_directory}/boundaries.geojsonseq" --provinces "$provinces")"
+    region_area="$("$generator" region-area --boundaries "${working_directory}/boundaries.geojsonseq" \
+        --official "${repository_directory}/${OFFICIAL_MUNICIPALITIES}" --provinces "$provinces")"
     build_url="$(latest_protomaps_build_url)"
     step "Extracting ${region_area} from ${build_url}"
     pmtiles extract "$build_url" "${working_directory}/source.pmtiles" --bbox="$region_area" --maxzoom="$MAXIMUM_ZOOM"
@@ -72,6 +73,7 @@ build_provinces() {
         step "Building the packages of province ${province}"
         "$generator" build-packages \
             --boundaries "${working_directory}/boundaries.geojsonseq" \
+            --official "${repository_directory}/${OFFICIAL_MUNICIPALITIES}" \
             --places "${working_directory}/places.geojsonseq" \
             --map "${working_directory}/source.pmtiles" \
             --provinces "$province" \

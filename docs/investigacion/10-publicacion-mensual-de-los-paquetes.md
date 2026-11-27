@@ -1,7 +1,7 @@
 # Investigación: publicación mensual de los paquetes en GitHub
 
-Fecha: 2026-11-26. Estado: cuarta revisión, con los rechazos de Geofabrik y la prueba en GitHub Actions
-(apartados 10 y 11, 2026-11-27).
+Fecha: 2026-11-26. Estado: quinta revisión, con los rechazos de Geofabrik, la prueba en GitHub Actions
+y la comparación de toda España con el INE (apartados 10 a 12, 2026-11-27).
 
 ## Pregunta
 
@@ -178,6 +178,28 @@ publicar el índice. Los dos primeros intentos fallaron porque Geofabrik rechaz�
 - **Tamaño del índice:** 63 KB para 88 paquetes, unos 720 bytes por paquete. Para toda España serían
   unos 5,8 MB, más que un paquete típico; con gzip, unos 1,5 MB. Hay que decidir en la parte 3c cómo lo
   descarga la app (comprimido, por provincia u otra forma) para no gastar datos de más.
+
+## 12. Toda España comparada con la relación del INE
+
+2026-11-27, en local, con los extractos de España y de Canarias de Geofabrik del mismo día. La
+comparación tarda 4 segundos.
+
+- 8.132 municipios oficiales; en OpenStreetMap faltan 3, menos del 1 %, así que la publicación sigue:
+
+  | Municipio | Causa en los datos |
+  |---|---|
+  | Ceuta (51001) | Su relación está bien etiquetada, pero a su contorno le faltan 4 tramos en todos los extractos de Geofabrik, también en el de Ceuta, y osmium no puede cerrarlo |
+  | Casariche (41026) | Etiquetado con `admin_level=7` en lugar de 8 |
+  | Campo (22074) | Tiene `ine:municipio`, pero no `boundary` ni `admin_level` |
+
+- Sobran 3 límites con nivel 8 y un código de cinco cifras que no está en la relación oficial: la
+  Comunidad de Barbadillo del Pez y Jaramillo de la Fuente (09711), el Coto Mancomunado de Pedrosillo
+  el Ralo y Villaverde de Guareña (37701) y la Comunidad de Soto de la Vega y Villazala (53053). Son
+  tierras compartidas por dos municipios, no municipios, y el último habría creado una "provincia 53".
+  Desde esta revisión, solo tienen paquete los municipios de la relación oficial.
+- Con ese filtro salen 51 provincias: todas menos Ceuta.
+- Pendiente: dar paquete a Ceuta, Casariche y Campo, corrigiendo los datos en OpenStreetMap o haciendo
+  el generador tolerante a estos casos.
 
 ## Fuentes
 

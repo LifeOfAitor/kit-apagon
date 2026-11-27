@@ -17,11 +17,21 @@ write_fakes() {
     local fakes="$1"
     mkdir -p "$fakes"
 
-    # gh: records its arguments; lists the releases in FAKE_RELEASES; fails the first FAKE_FAILED_UPLOADS uploads.
+    # gh: records its arguments; lists the releases in FAKE_RELEASES; fails the first FAKE_FAILED_UPLOADS
+    # uploads; like GitHub, has no tag for the drafts in FAKE_DRAFTS and refuses to delete a missing tag.
     cat > "${fakes}/gh" <<'EOF'
 #!/usr/bin/env bash
 echo "gh $*" >> "${FAKE_LOG}"
-if [[ "$1 $2" == "release list" ]]; then
+tag_exists() {
+    [[ " ${FAKE_DRAFTS:-} " != *" ${1##*/} "* ]]
+}
+if [[ "$1" == "api" && "$2" == "--method" ]]; then
+    tag_exists "$4" || { echo "HTTP 422: Reference does not exist" >&2; exit 1; }
+elif [[ "$1" == "api" ]]; then
+    tag_exists "$2" || { echo "HTTP 404: Not Found" >&2; exit 1; }
+elif [[ "$1 $2" == "release delete" && " $* " == *" --cleanup-tag "* ]]; then
+    tag_exists "$3" || { echo "HTTP 422: Reference does not exist" >&2; exit 1; }
+elif [[ "$1 $2" == "release list" ]]; then
     echo "${FAKE_RELEASES:-[]}"
 elif [[ "$1 $2" == "release upload" ]]; then
     uploads=$(( $(cat "${FAKE_LOG}.uploads" 2>/dev/null || echo 0) + 1 ))
@@ -167,13 +177,18 @@ write_fakes "${working_directory}/fakes"
 
 # A full monthly run.
 full="${working_directory}/full"
-exit_code="$(run_script "$full" PUBLISH_INDEX=true "FAKE_LEFTOVERS=${VERSION}-ES-01" FAKE_OBSOLETE=2026-10-02 FAKE_FAILED_UPLOADS=1)"
+exit_code="$(run_script "$full" PUBLISH_INDEX=true "FAKE_LEFTOVERS=${VERSION} ${VERSION}-ES-01" "FAKE_DRAFTS=${VERSION}" \
+    FAKE_OBSOLETE=2026-10-02 FAKE_FAILED_UPLOADS=1)"
 log="${full}/calls.log"
 check "a full run ends well" test "$exit_code" -eq 0
 show_output_unless_successful "$full" "$exit_code"
 check "it deletes what a failed run of the same day left before anything else" \
-    test "$(line_of "$log" "gh release delete ${VERSION}-ES-01 --repo LifeOfAitor/kit-apagon-datos --cleanup-tag --yes")" \
+    test "$(line_of "$log" "gh release delete ${VERSION}-ES-01 --repo LifeOfAitor/kit-apagon-datos --yes")" \
     -lt "$(line_of "$log" "osmium")"
+check "it deletes the tag of a leftover that has one" \
+    grep -q -- "gh api --method DELETE repos/LifeOfAitor/kit-apagon-datos/git/refs/tags/${VERSION}-ES-01" "$log"
+check "it deletes a leftover draft, which has no tag, without failing" \
+    bash -c "grep -q -- 'gh release delete ${VERSION} --repo' '$log' && ! grep -q -- 'git/refs/tags/${VERSION}\$' '$log'"
 check "it exports both the extract of Spain and the one of the Canary Islands" \
     test "$(grep -c "osmium export" "$log")" -eq 4
 check "it publishes each province as a prerelease with its tar" \

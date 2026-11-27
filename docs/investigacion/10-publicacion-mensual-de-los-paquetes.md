@@ -1,6 +1,6 @@
 # Investigación: publicación mensual de los paquetes en GitHub
 
-Fecha: 2026-11-26. Estado: segunda revisión, con los resultados del generador (apartado 9).
+Fecha: 2026-11-26. Estado: tercera revisión, con los rechazos de Geofabrik (apartado 10, 2026-11-27).
 
 ## Pregunta
 
@@ -131,6 +131,23 @@ Con `scripts/build-region-packages.sh` y el País Vasco, ya con un tar por provi
   - un script de Python lee cada archivo en su posición del tar y comprueba tamaño y huella.
 - El proceso completo sigue tardando menos de 30 segundos.
 
+## 10. Rechazos de Geofabrik desde GitHub Actions
+
+2026-11-27: las dos primeras ejecuciones de prueba en el repositorio de datos fallaron al descargar el
+extracto de España. `download.geofabrik.de` rechazó la conexión del ejecutor dos veces en menos de un
+segundo, en dos ejecutores distintos. No se publicó nada.
+
+- Otros proyectos describen lo mismo desde el 20 de noviembre: Geofabrik rechaza las conexiones de
+  parte de los ejecutores de GitHub, a veces casi la mitad, mientras otros descargan con normalidad.
+  Geofabrik no ha publicado nada sobre la causa.
+- Repetir dentro del mismo ejecutor no ayuda cuando su dirección está rechazada. Además, `curl` no
+  repite por defecto una conexión rechazada: hace falta `--retry-connrefused`.
+- Fallo propio encontrado: el script siguió dos pasos después de la descarga fallida, porque el
+  extracto se pedía dentro de `$(...)`, donde `set -e` no detiene la función. Terminó parado en osmium,
+  pero por casualidad. Corregido: cada paso de la descarga comprueba su resultado, la descarga se
+  guarda con otro nombre hasta que su MD5 es correcto y un test reproduce el rechazo.
+- Pendiente: decidir cómo seguir publicando si Geofabrik rechaza a todos los ejecutores de un día.
+
 ## Fuentes
 
 - https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
@@ -146,3 +163,5 @@ Con `scripts/build-region-packages.sh` y el País Vasco, ya con un tar por provi
 - https://www.ine.es/dyngs/AYU/index.htm?cid=125 (aviso legal del INE)
 - https://packages.ubuntu.com/noble/osmium-tool
 - Prueba propia de descargas parciales con `curl -r`, 2026-11-26.
+- https://github.com/gsueur/osm-geoparquet/pull/201 y https://github.com/gsueur/osm-geoparquet/pull/205
+- https://github.com/patricebender/resupply-karoo/pull/160

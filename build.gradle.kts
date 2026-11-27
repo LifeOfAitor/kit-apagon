@@ -87,11 +87,18 @@ val monthlyPublicationScriptTests =
         commandLine("scripts/tests/publish-monthly-packages-test.sh")
     }
 
+val monthCheckScriptTests =
+    tasks.register<Exec>("monthCheckScriptTests") {
+        group = "verification"
+        description = "Runs the tests of the script that tells whether a month is already published."
+        commandLine("scripts/tests/month-is-published-test.sh")
+    }
+
 val scriptTests =
     tasks.register("scriptTests") {
         group = "verification"
         description = "Runs the tests of the shell scripts."
-        dependsOn(downloadRetriesScriptTests, monthlyPublicationScriptTests)
+        dependsOn(downloadRetriesScriptTests, monthlyPublicationScriptTests, monthCheckScriptTests)
     }
 
 tasks.register("verifyAll") {

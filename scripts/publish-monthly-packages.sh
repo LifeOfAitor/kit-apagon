@@ -4,7 +4,8 @@
 #
 #   1. Deletes what a failed run of the same day left, and stops if the day is already published.
 #   2. Exports boundaries and places from the Geofabrik extracts of Spain and of the Canary Islands.
-#   3. Compares the municipalities with the official list of the INE.
+#   3. Asks Overpass for the few official municipalities whose boundary the extract could not give,
+#      and compares the municipalities with the official list of the INE.
 #   4. Province by province: cuts the map from the Protomaps build of the day, builds the tar and
 #      publishes it as a prerelease, then deletes it from the disk.
 #   5. Signs the index, checking it with the public key of the app.
@@ -268,6 +269,9 @@ main() {
     step "Version ${data_version} of ${DATA_REPOSITORY}"
     clean_leftovers
     prepare_inputs
+    step "Completing from Overpass the boundaries the extract could not give"
+    complete_missing_boundaries "$generator" "${work_directory}/boundaries.geojsonseq" "$official_municipalities" \
+        "${work_directory}/overpass" "${PROVINCES:-}"
     step "Comparing the municipalities with the official list of the INE"
     local check_output build_url provinces province sign_output
     check_output="$(check_municipalities)"

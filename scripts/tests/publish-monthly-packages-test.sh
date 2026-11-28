@@ -40,10 +40,15 @@ elif [[ "$1 $2" == "release upload" ]]; then
 fi
 EOF
 
-    # curl: the list of Protomaps builds, or a small extract with its MD5 checksum.
+    # curl: the list of Protomaps builds, a small extract with its MD5 checksum, or Overpass, which fails
+    # when FAKE_OVERPASS_FAILS is true. Overpass calls are recorded.
     cat > "${fakes}/curl" <<'EOF'
 #!/usr/bin/env bash
 url="${*: -1}"
+if [[ "$url" == *overpass-api.de* ]]; then
+    echo "curl $*" >> "${FAKE_LOG}"
+    [[ "${FAKE_OVERPASS_FAILS:-false}" == "true" ]] && { echo "curl: (22) The requested URL returned error: 504" >&2; exit 22; }
+fi
 output=""
 while [[ $# -gt 0 ]]; do
     [[ "$1" == "--output" ]] && output="$2"
@@ -52,6 +57,8 @@ done
 if [[ "$url" == *geofabrik* && "${FAKE_GEOFABRIK_REFUSES:-false}" == "true" ]]; then
     echo "curl: (7) Failed to connect to download.geofabrik.de port 443: Couldn't connect to server" >&2
     exit 7
+elif [[ "$url" == *overpass-api.de* ]]; then
+    echo "<osm/>" > "$output"
 elif [[ "$url" == *builds.json ]]; then
     echo '[{"key":"20261201.pmtiles"},{"key":"20261202.pmtiles"}]'
 elif [[ "$url" == *.md5 ]]; then
@@ -96,6 +103,11 @@ case "$command" in
     release-leftovers)
         [[ "${FAKE_ALREADY_PUBLISHED:-false}" == "true" ]] && { echo "already published" >&2; exit 1; }
         printf '%s\n' ${FAKE_LEFTOVERS:-} ;;
+    missing-boundaries)
+        printf '%s\n' ${FAKE_MISSING:-} ;;
+    complete-boundaries)
+        echo "{}" > "$(option output "${arguments[@]}")"
+        echo "completed: 1 of 1" ;;
     check-municipalities)
         echo "Municipios de la relación oficial del INE: 8132" > "$(option report "${arguments[@]}")"
         printf 'official: 8132\nmissing: 3\nunexpected: 0\n' ;;
@@ -178,7 +190,7 @@ write_fakes "${working_directory}/fakes"
 # A full monthly run.
 full="${working_directory}/full"
 exit_code="$(run_script "$full" PUBLISH_INDEX=true "FAKE_LEFTOVERS=${VERSION} ${VERSION}-ES-01" "FAKE_DRAFTS=${VERSION}" \
-    FAKE_OBSOLETE=2026-10-02 FAKE_FAILED_UPLOADS=1)"
+    FAKE_OBSOLETE=2026-10-02 FAKE_FAILED_UPLOADS=1 "FAKE_MISSING=22074 51001")"
 log="${full}/calls.log"
 check "a full run ends well" test "$exit_code" -eq 0
 show_output_unless_successful "$full" "$exit_code"
@@ -190,13 +202,21 @@ check "it deletes the tag of a leftover that has one" \
 check "it deletes a leftover draft, which has no tag, without failing" \
     bash -c "grep -q -- 'gh release delete ${VERSION} --repo' '$log' && ! grep -q -- 'git/refs/tags/${VERSION}\$' '$log'"
 check "it exports both the extract of Spain and the one of the Canary Islands" \
-    test "$(grep -c "osmium export" "$log")" -eq 4
+    test "$(grep "osmium export" "$log" | grep -c -v "/overpass/")" -eq 4
 check "it publishes each province as a prerelease with its tar" \
     grep -q -- "gh release create ${VERSION}-ES-48 --repo LifeOfAitor/kit-apagon-datos --prerelease" "$log"
 check "it repeats a failed upload" \
     test "$(grep -c "gh release upload ${VERSION}-ES-20 " "$log")" -eq 2
 check "only the municipalities of the official list of the INE get a package" \
     bash -c "grep 'generator provinces ' '$log' | grep -q -- '--official .*municipios-ine-2026.csv' && grep 'generator build-packages ' '$log' | grep -q -- '--official .*municipios-ine-2026.csv'"
+check "it asks Overpass only for the municipalities the extract could not give" \
+    test "$(grep -c "overpass-api.de" "$log")" -eq 2
+check "it asks Overpass for a municipality by its INE code" \
+    grep -q -F 'relation["ine:municipio"="51001"]' "$log"
+check "it identifies itself to Overpass with the address of the data repository" \
+    grep -q -F -- "--user-agent kit-apagon-datos (+https://github.com/LifeOfAitor/kit-apagon-datos)" "$log"
+check "it completes the boundaries before comparing them with the official list" \
+    test "$(line_of "$log" "generator complete-boundaries")" -lt "$(line_of "$log" "generator check-municipalities")"
 check "the map of each province is cut from the build of the day" \
     grep -q -- "pmtiles extract https://build.protomaps.com/20261202.pmtiles" "$log"
 check "it signs the index with the public key of the app" \
@@ -227,6 +247,19 @@ check "a trial run does not commit to the data repository" \
     bash -c "! git -C '${trial}/remote.git' rev-parse --quiet --verify HEAD > /dev/null"
 check "a trial run does not delete old versions" \
     bash -c "! grep -q 'obsolete-releases' '$log'"
+
+# Overpass is a help, not a requirement.
+busy="${working_directory}/busy"
+exit_code="$(run_script "$busy" PUBLISH_INDEX=true FAKE_MISSING=51001 FAKE_OVERPASS_FAILS=true)"
+check "a failure of Overpass does not stop the publication" \
+    bash -c "[[ $exit_code -eq 0 ]] && grep -q 'gh release edit ${VERSION} ' '${busy}/calls.log'"
+
+broken_extract="${working_directory}/broken-extract"
+exit_code="$(run_script "$broken_extract" PUBLISH_INDEX=false PROVINCES=20 "FAKE_MISSING=$(seq -w 20001 20021 | tr '\n' ' ')")"
+check "with more than 20 missing municipalities Overpass is not asked" \
+    bash -c "[[ $exit_code -eq 0 ]] && ! grep -q 'overpass-api.de' '${broken_extract}/calls.log' && ! grep -q 'complete-boundaries' '${broken_extract}/calls.log'"
+check "a trial run looks only for the missing municipalities of its provinces" \
+    grep -q -- "generator missing-boundaries .* --provinces 20" "${broken_extract}/calls.log"
 
 # Runs that must stop.
 partial="${working_directory}/partial"

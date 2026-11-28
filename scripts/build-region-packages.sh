@@ -47,6 +47,9 @@ export_osm_data() {
 }
 
 check_municipalities() {
+    step "Completing from Overpass the boundaries the extract could not give"
+    complete_missing_boundaries "$generator" "${working_directory}/boundaries.geojsonseq" \
+        "${repository_directory}/${OFFICIAL_MUNICIPALITIES}" "${working_directory}/overpass" "$provinces"
     step "Comparing the municipalities with the official list of the INE"
     "$generator" check-municipalities \
         --boundaries "${working_directory}/boundaries.geojsonseq" \

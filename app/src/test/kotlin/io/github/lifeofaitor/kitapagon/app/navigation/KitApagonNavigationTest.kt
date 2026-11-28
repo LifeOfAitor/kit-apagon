@@ -1,8 +1,10 @@
 package io.github.lifeofaitor.kitapagon.app.navigation
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -58,22 +60,64 @@ class KitApagonNavigationTest {
         composeRule.onNodeWithText(MAP_TEXT).assertIsDisplayed()
     }
 
+    @Test
+    fun aMunicipalityAddedFromTheListReturnsToTheMapOnceInstalled() {
+        showNavigation()
+        composeRule.onNodeWithText(OPEN_MAP_TEXT).performClick()
+        composeRule.onNodeWithText(MY_MUNICIPALITIES_TEXT).performClick()
+        composeRule.onNodeWithText(ADD_TEXT).performClick()
+
+        composeRule.onNodeWithText(INSTALLED_TEXT).performClick()
+
+        composeRule.onNodeWithText(MAP_TEXT).assertIsDisplayed()
+    }
+
+    @Test
+    fun choosingWhichMunicipalityToShowReturnsToTheMap() {
+        showNavigation()
+        composeRule.onNodeWithText(OPEN_MAP_TEXT).performClick()
+        composeRule.onNodeWithText(MY_MUNICIPALITIES_TEXT).performClick()
+        composeRule.onNodeWithText(MY_MUNICIPALITIES_SCREEN_TEXT).assertIsDisplayed()
+
+        composeRule.onNodeWithText(SHOW_TEXT).performClick()
+
+        composeRule.onNodeWithText(MAP_TEXT).assertIsDisplayed()
+    }
+
     private fun showNavigation() {
         composeRule.setContent {
             KitApagonNavigation(
-                homeScreen = { onOpenMap ->
-                    Text(HOME_TEXT)
-                    Button(onClick = onOpenMap) { Text(OPEN_MAP_TEXT) }
-                },
-                mapScreen = { onChooseMunicipality ->
-                    Text(MAP_TEXT)
-                    Button(onClick = onChooseMunicipality) { Text(CHOOSE_TEXT) }
+                homeScreen = { onOpenMap -> FakeScreen(HOME_TEXT, OPEN_MAP_TEXT to onOpenMap) },
+                mapScreen = { navigation ->
+                    FakeScreen(
+                        MAP_TEXT,
+                        CHOOSE_TEXT to navigation.onChooseMunicipality,
+                        MY_MUNICIPALITIES_TEXT to navigation.onOpenMunicipalities,
+                    )
                 },
                 chooseMunicipalityScreen = { onInstalled ->
-                    Text(CHOOSE_SCREEN_TEXT)
-                    Button(onClick = onInstalled) { Text(INSTALLED_TEXT) }
+                    FakeScreen(CHOOSE_SCREEN_TEXT, INSTALLED_TEXT to onInstalled)
+                },
+                myMunicipalitiesScreen = { navigation ->
+                    FakeScreen(
+                        MY_MUNICIPALITIES_SCREEN_TEXT,
+                        ADD_TEXT to navigation.onAddMunicipality,
+                        SHOW_TEXT to navigation.onShown,
+                    )
                 },
             )
+        }
+    }
+
+    // A screen with its name and one button for each place it can go.
+    @Composable
+    private fun FakeScreen(
+        name: String,
+        vararg buttons: Pair<String, () -> Unit>,
+    ) {
+        Column {
+            Text(name)
+            buttons.forEach { (label, onClick) -> Button(onClick = onClick) { Text(label) } }
         }
     }
 
@@ -84,5 +128,9 @@ class KitApagonNavigationTest {
         const val CHOOSE_TEXT = "choose municipality"
         const val CHOOSE_SCREEN_TEXT = "fake choose municipality"
         const val INSTALLED_TEXT = "installed"
+        const val MY_MUNICIPALITIES_TEXT = "my municipalities"
+        const val MY_MUNICIPALITIES_SCREEN_TEXT = "fake my municipalities"
+        const val ADD_TEXT = "add municipality"
+        const val SHOW_TEXT = "show municipality"
     }
 }

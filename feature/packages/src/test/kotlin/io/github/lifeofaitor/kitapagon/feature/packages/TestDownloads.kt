@@ -2,6 +2,7 @@ package io.github.lifeofaitor.kitapagon.feature.packages
 
 import io.github.lifeofaitor.kitapagon.core.packagedownload.DownloadablePackage
 import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityMatch
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageId
 import io.github.lifeofaitor.kitapagon.core.packageformat.municipalityEntry
 import io.github.lifeofaitor.kitapagon.core.packageformat.municipalityList
 import io.github.lifeofaitor.kitapagon.core.packageformat.packageDetails
@@ -39,6 +40,8 @@ internal class FakePackageDownloads : PackageDownloads {
     }
 
     override val installedCount: Flow<Int> = MutableStateFlow(0)
+
+    override suspend fun packagesBeingDownloaded(): Set<PackageId> = started.map { it.info.id }.toSet()
 
     fun moveLastJobTo(state: DownloadState) {
         states.getValue(checkNotNull(lastJob)).value = state

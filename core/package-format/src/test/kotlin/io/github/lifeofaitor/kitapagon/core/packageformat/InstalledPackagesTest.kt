@@ -79,6 +79,18 @@ class InstalledPackagesTest {
     }
 
     @Test
+    fun theMapShowsTheChosenPackageOrTheFirstOneIfItIsNotInstalled() {
+        installPackage("ES-20045")
+        installPackage("ES-48020")
+        val installed = InstalledPackages(packagesDirectory).list()
+
+        assertEquals("ES-48020", installed.shownPackage(PackageId.parseOrNull("ES-48020"))?.id?.value)
+        assertEquals("ES-20045", installed.shownPackage(PackageId.parseOrNull("ES-01059"))?.id?.value)
+        assertEquals("ES-20045", installed.shownPackage(null)?.id?.value)
+        assertEquals(null, emptyList<InstalledPackage>().shownPackage(null))
+    }
+
+    @Test
     fun namesEachKindOfFileAsTheDeviceStoresIt() {
         assertEquals("map.pmtiles", InstalledPackages.fileNameOf(PackageFileKind.MAP))
         assertEquals("places.json", InstalledPackages.fileNameOf(PackageFileKind.PLACES))

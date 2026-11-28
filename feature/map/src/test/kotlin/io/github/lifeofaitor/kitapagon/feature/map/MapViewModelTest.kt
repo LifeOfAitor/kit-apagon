@@ -1,9 +1,13 @@
 package io.github.lifeofaitor.kitapagon.feature.map
 
 import app.cash.turbine.test
+import io.github.lifeofaitor.kitapagon.core.packageformat.InstalledPackageInfoWriter
 import io.github.lifeofaitor.kitapagon.core.packageformat.InstalledPackages
+import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityNames
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageId
 import io.github.lifeofaitor.kitapagon.core.packageformat.PlaceCategory
 import io.github.lifeofaitor.kitapagon.core.packageformat.PlacesFileWriter
+import io.github.lifeofaitor.kitapagon.core.packageformat.installedPackageInfo
 import io.github.lifeofaitor.kitapagon.core.packageformat.validHeader
 import io.github.lifeofaitor.kitapagon.feature.map.TestPlaces.HOSPITAL
 import io.github.lifeofaitor.kitapagon.feature.map.TestPlaces.IRUN
@@ -11,8 +15,11 @@ import io.github.lifeofaitor.kitapagon.feature.map.TestPlaces.IRUN_AREA
 import io.github.lifeofaitor.kitapagon.feature.map.TestPlaces.PHARMACY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -67,6 +74,52 @@ class MapViewModelTest {
 
                 assertEquals(IRUN, (awaitItem() as MapScreenState.Ready).packageId)
             }
+        }
+
+    @Test
+    fun showsTheMunicipalityChosenAndItsName() =
+        runTest(testDispatcher) {
+            installMap(validHeader(IRUN_AREA))
+            installMap(validHeader(IRUN_AREA), BILBAO)
+            File(packageDirectory(BILBAO), InstalledPackages.INFO_FILE_NAME)
+                .writeText(
+                    InstalledPackageInfoWriter.write(
+                        installedPackageInfo().copy(id = BILBAO, names = MunicipalityNames("Bilbao")),
+                    ),
+                )
+
+            val ready = awaitReadyState(shownPackageId = flowOf(BILBAO))
+
+            assertEquals(BILBAO, ready.packageId)
+            assertEquals("Bilbao", ready.name)
+        }
+
+    @Test
+    fun showsTheFirstMunicipalityWhenTheChosenOneIsNotInstalled() =
+        runTest(testDispatcher) {
+            installMap(validHeader(IRUN_AREA))
+
+            val ready = awaitReadyState(shownPackageId = flowOf(BILBAO))
+
+            assertEquals(IRUN, ready.packageId)
+            assertEquals("ES-20045", ready.name)
+        }
+
+    @Test
+    fun changingTheMunicipalityClosesThePlaceThatWasOpen() =
+        runTest(testDispatcher) {
+            installMap(validHeader(IRUN_AREA))
+            installMap(validHeader(IRUN_AREA), BILBAO)
+            val shown = MutableStateFlow<PackageId?>(IRUN)
+            val viewModel = MapViewModel(InstalledPackages(temporaryFolder.root), testDispatcher, flowOf(Unit), shown)
+            advanceUntilIdle()
+            viewModel.selectPlace(PHARMACY)
+
+            shown.value = BILBAO
+            advanceUntilIdle()
+
+            assertEquals(BILBAO, (viewModel.state.value as MapScreenState.Ready).packageId)
+            assertEquals(PlacesInteraction(), viewModel.interaction.value)
         }
 
     @Test
@@ -152,9 +205,9 @@ class MapViewModelTest {
             assertEquals(PlacesInteraction(), viewModel.interaction.value)
         }
 
-    private suspend fun awaitReadyState(): MapScreenState.Ready {
+    private suspend fun awaitReadyState(shownPackageId: Flow<PackageId?> = flowOf(null)): MapScreenState.Ready {
         var ready: MapScreenState.Ready? = null
-        createViewModel().state.test {
+        MapViewModel(InstalledPackages(temporaryFolder.root), testDispatcher, flowOf(Unit), shownPackageId).state.test {
             assertEquals(MapScreenState.Loading, awaitItem())
             ready = awaitItem() as MapScreenState.Ready
         }
@@ -164,12 +217,18 @@ class MapViewModelTest {
     private fun createViewModel(): MapViewModel =
         MapViewModel(InstalledPackages(temporaryFolder.root), ioDispatcher = testDispatcher)
 
-    private fun packageDirectory(): File = File(temporaryFolder.root, IRUN.value).apply { mkdirs() }
+    private fun packageDirectory(id: PackageId = IRUN): File = File(temporaryFolder.root, id.value).apply { mkdirs() }
 
-    private fun installMap(mapContent: ByteArray): File =
-        File(packageDirectory(), InstalledPackages.MAP_FILE_NAME).apply { writeBytes(mapContent) }
+    private fun installMap(
+        mapContent: ByteArray,
+        id: PackageId = IRUN,
+    ): File = File(packageDirectory(id), InstalledPackages.MAP_FILE_NAME).apply { writeBytes(mapContent) }
 
     private fun installPlaces(placesContent: String) {
         File(packageDirectory(), InstalledPackages.PLACES_FILE_NAME).writeText(placesContent)
+    }
+
+    private companion object {
+        val BILBAO: PackageId = PackageId.parseOrNull("ES-48020")!!
     }
 }

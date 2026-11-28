@@ -30,6 +30,19 @@
     <string name="choose_cancelled">Descarga cancelada.</string>
     <string name="choose_try_again">Intentarlo de nuevo</string>
 
+    <string name="my_municipalities_title">Mis municipios</string>
+    <string name="my_municipalities_loading">Leyendo tus municipios…</string>
+    <string name="my_municipalities_empty">Todavía no hay ningún municipio descargado.</string>
+    <string name="my_municipalities_add">Añadir municipio</string>
+    <string name="my_municipalities_shown">Se muestra en el mapa</string>
+    <string name="my_municipalities_show">Ver en el mapa</string>
+    <string name="my_municipalities_delete">Borrar</string>
+    <string name="my_municipalities_cancel">Cancelar</string>
+    <string name="my_municipalities_delete_title">¿Borrar %1$s?</string>
+    <string name="my_municipalities_delete_text">Ocupa %1$s. Para volver a tenerlo tendrás que descargarlo otra vez, con conexión.</string>
+    <string name="my_municipalities_delete_only_map_text">Es tu único mapa: si lo borras, no tendrás ninguno hasta que vuelvas a descargarlo con conexión. Ocupa %1$s.</string>
+    <string name="my_municipalities_delete_failed">No se ha podido borrar el municipio. Inténtalo de nuevo.</string>
+
     <string name="download_notification_channel">Descargas de mapas</string>
     <string name="download_notification_title">Descargando el mapa de %1$s</string>
     <string name="download_notification_cancel">Cancelar</string>

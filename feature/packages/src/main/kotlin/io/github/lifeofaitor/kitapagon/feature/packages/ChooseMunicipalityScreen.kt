@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityMatch
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageId
 import io.github.lifeofaitor.kitapagon.core.ui.theme.Spacing
 import io.github.lifeofaitor.kitapagon.core.ui.theme.TouchTargets
 import java.util.Locale
@@ -36,12 +37,18 @@ import java.util.Locale
 @Composable
 fun ChooseMunicipalityScreen(
     viewModel: ChooseMunicipalityViewModel,
-    onInstalled: () -> Unit,
+    onInstalled: (PackageId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isInstalled = (state.selection as? Selection.Downloading)?.download == DownloadState.Installed
-    LaunchedEffect(isInstalled) { if (isInstalled) onInstalled() }
+    val downloading = state.selection as? Selection.Downloading
+    val installedId =
+        downloading
+            ?.target
+            ?.info
+            ?.id
+            ?.takeIf { downloading.download == DownloadState.Installed }
+    LaunchedEffect(installedId) { installedId?.let(onInstalled) }
     ChooseMunicipalityContent(state, ChooseMunicipalityActions.of(viewModel), modifier)
 }
 

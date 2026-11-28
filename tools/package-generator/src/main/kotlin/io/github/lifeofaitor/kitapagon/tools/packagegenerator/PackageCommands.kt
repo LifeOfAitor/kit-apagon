@@ -1,9 +1,9 @@
 package io.github.lifeofaitor.kitapagon.tools.packagegenerator
 
 import io.github.lifeofaitor.kitapagon.core.packageformat.GeographicBounds
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexWriter
 import io.github.lifeofaitor.kitapagon.core.packageformat.PlacesFileWriter
 import io.github.lifeofaitor.kitapagon.core.packageformat.PmtilesHeaderReader
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceDetailsWriter
 import java.io.File
 import java.util.Locale
 import kotlin.math.ceil
@@ -41,7 +41,11 @@ class PackageCommands(
 
     fun buildPackages(command: GeneratorCommand.BuildPackages) {
         require(DataVersion.isValid(command.dataVersion)) { "The data version must be a date such as 2026-12-01." }
-        val addressTemplate = DownloadAddressTemplate(command.addressTemplate)
+        val provinceNames =
+            OfficialMunicipalitiesFile.read(command.official.readText()).associate {
+                it.code.take(2) to
+                    it.provinceName
+            }
         val municipalities =
             ProvinceSelection.officialMunicipalitiesOf(
                 command.boundaries,
@@ -52,8 +56,13 @@ class PackageCommands(
         val places = command.places.useLines { lines -> OsmiumPlacesConverter.convertLines(lines) }
         val built =
             PackageBuilder(mapExtractorFor(command.sourceMap))
-                .build(municipalities, places, command.output, command.dataVersion, addressTemplate)
-        File(command.output, INDEX_PART_FILE_NAME).writeText(PackageIndexWriter.write(built.indexPart))
+                .build(municipalities, places, command.output, command.dataVersion, provinceNames)
+        built.provinces.forEach { details ->
+            File(
+                command.output,
+                IndexBuilder.partFileNameOf(details.provinceCode),
+            ).writeText(ProvinceDetailsWriter.write(details))
+        }
         print(BuiltPackagesSummary.describe(built))
     }
 
@@ -69,9 +78,7 @@ class PackageCommands(
             ceil(area.north * DECIMAL_SCALE),
         ).joinToString(",") { scaled -> "%.5f".format(Locale.ROOT, scaled / DECIMAL_SCALE) }
 
-    companion object {
-        /** Written next to the tars of a build; [IndexParts] joins them into the signed index. */
-        const val INDEX_PART_FILE_NAME = "index-part.json"
-        private const val DECIMAL_SCALE = 100_000.0
+    private companion object {
+        const val DECIMAL_SCALE = 100_000.0
     }
 }

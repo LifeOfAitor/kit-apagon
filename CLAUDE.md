@@ -47,7 +47,9 @@ Es una herramienta de emergencia: la fiabilidad está por encima de la velocidad
   Actions, con índice firmado y huellas SHA-256 que permiten usar réplicas (decisión 0006). Límites y
   códigos de OpenStreetMap, firma ECDSA P-256 (Ed25519 no existe de serie en Android 8) y publicación
   desde el repositorio `kit-apagon-datos` (decisión 0013). Un tar sin comprimir por provincia y
-  descargas parciales: el índice da la posición de cada archivo dentro del tar (decisión 0014).
+  descargas parciales: el índice da la posición de cada archivo dentro del tar (decisión 0014). El
+  índice va en dos niveles y con gzip: una lista firmada de nombres y un archivo por provincia; la app
+  descarga con WorkManager y muestra la fecha de los datos (decisión 0017).
   El trabajo programado se ejecuta los días 2 a 8 y no hace nada si el mes ya está publicado
   (decisión 0015). Los municipios oficiales que no salen bien del extracto se piden a Overpass, como
   mucho 20 al mes (decisión 0016). La clave pública del índice está en `tools/package-generator/data/`;

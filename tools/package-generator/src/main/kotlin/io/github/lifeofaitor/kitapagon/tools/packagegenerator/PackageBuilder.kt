@@ -1,16 +1,17 @@
 package io.github.lifeofaitor.kitapagon.tools.packagegenerator
 
-import io.github.lifeofaitor.kitapagon.core.packageformat.IndexedPackage
+import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityList
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageFileKind
 import io.github.lifeofaitor.kitapagon.core.packageformat.PackageId
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndex
 import io.github.lifeofaitor.kitapagon.core.packageformat.Place
 import io.github.lifeofaitor.kitapagon.core.packageformat.PlacesFileWriter
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceDetails
 import java.io.File
 import java.util.Locale
 
 data class BuiltPackages(
-    /** The index part that describes the packages; joined with the other parts by [IndexParts]. */
-    val indexPart: PackageIndex,
+    /** The details of each province built, the parts [IndexParts] joins into the published index. */
+    val provinces: List<ProvinceDetails>,
     val placeCounts: Map<PackageId, Int>,
     /** The tars to publish, one or more per province (decision 0014). */
     val bundles: List<File>,
@@ -29,9 +30,9 @@ class PackageBuilder(
         places: List<Place>,
         outputDirectory: File,
         dataVersion: String,
-        addressTemplate: DownloadAddressTemplate,
+        provinceNames: Map<String, String>,
     ): BuiltPackages {
-        require(DataVersion.isValid(dataVersion)) { "The data version must be a date such as 2026-12-01: $dataVersion" }
+        requireValid(municipalities, dataVersion, provinceNames)
         val looseFilesDirectory = File(outputDirectory, LOOSE_FILES_DIRECTORY_NAME)
         check(looseFilesDirectory.isDirectory || looseFilesDirectory.mkdirs()) { "Cannot create $looseFilesDirectory" }
         val request =
@@ -40,22 +41,30 @@ class PackageBuilder(
                 outputDirectory,
                 looseFilesDirectory,
                 dataVersion,
-                addressTemplate,
             )
         val provinces =
             municipalities
                 .groupBy { municipality -> municipality.provinceCode }
                 .toSortedMap()
-                .map { (provinceCode, provinceMunicipalities) ->
-                    ProvinceBuild(provinceCode, provinceMunicipalities, request).run()
+                .map { (code, provinceMunicipalities) ->
+                    ProvinceBuild(code, provinceNames.getValue(code), provinceMunicipalities, request).run()
                 }
         looseFilesDirectory.deleteRecursively()
-        val indexedPackages = provinces.flatMap { it.packages }.sortedBy { indexedPackage -> indexedPackage.id.value }
         return BuiltPackages(
-            indexPart = PackageIndex(PackageIndex.CURRENT_FORMAT_VERSION, dataVersion, indexedPackages),
+            provinces = provinces.map { it.details },
             placeCounts = request.placesByMunicipality.mapValues { (_, municipalityPlaces) -> municipalityPlaces.size },
             bundles = provinces.flatMap { it.bundles },
         )
+    }
+
+    private fun requireValid(
+        municipalities: List<Municipality>,
+        dataVersion: String,
+        provinceNames: Map<String, String>,
+    ) {
+        require(DataVersion.isValid(dataVersion)) { "The data version must be a date such as 2026-12-01: $dataVersion" }
+        val unnamed = municipalities.map { it.provinceCode }.distinct().filter { it !in provinceNames }
+        require(unnamed.isEmpty()) { "The official list has no name for the provinces $unnamed." }
     }
 
     /** What every province of one build shares. */
@@ -64,16 +73,16 @@ class PackageBuilder(
         val outputDirectory: File,
         val looseFilesDirectory: File,
         val dataVersion: String,
-        val addressTemplate: DownloadAddressTemplate,
     )
 
     private class BuiltProvince(
-        val packages: List<IndexedPackage>,
+        val details: ProvinceDetails,
         val bundles: List<File>,
     )
 
     private inner class ProvinceBuild(
         private val provinceCode: String,
+        private val provinceName: String,
         private val municipalities: List<Municipality>,
         private val request: BuildRequest,
     ) {
@@ -83,36 +92,46 @@ class PackageBuilder(
                 BundlePlan.split(
                     municipalities,
                     maximumBundleBytes,
-                ) { looseFiles.getValue(it).map(File::length) }
+                ) { looseFiles.getValue(it).values.map(File::length) }
             val bundleNames = BundlePlan.bundleNamesOf(provinceCode, parts.size)
             val packages =
                 parts.zip(bundleNames).flatMap { (partMunicipalities, bundleName) ->
                     val entries = writeBundle(File(request.outputDirectory, bundleName), partMunicipalities, looseFiles)
-                    val bundleAddress = request.addressTemplate.addressOf(request.dataVersion, provinceCode, bundleName)
                     partMunicipalities.map { municipality ->
-                        IndexBuilder.indexedPackageOf(municipality, entries.getValue(municipality), bundleAddress)
+                        IndexBuilder.packageDetailsOf(municipality, entries.getValue(municipality), bundleName)
                     }
                 }
-            looseFiles.values.flatten().forEach(File::delete)
-            return BuiltProvince(packages, bundleNames.map { File(request.outputDirectory, it) })
+            looseFiles.values.flatMap { it.values }.forEach(File::delete)
+            val details =
+                ProvinceDetails(
+                    MunicipalityList.CURRENT_FORMAT_VERSION,
+                    request.dataVersion,
+                    provinceCode,
+                    provinceName,
+                    packages.sortedBy { packageDetails -> packageDetails.id.value },
+                )
+            return BuiltProvince(details, bundleNames.map { File(request.outputDirectory, it) })
         }
 
-        private fun writeLooseFiles(municipality: Municipality): List<File> {
+        // The map first and then the places, the order they take inside the tar.
+        private fun writeLooseFiles(municipality: Municipality): Map<PackageFileKind, File> {
             val mapFile = File(request.looseFilesDirectory, IndexBuilder.mapFileNameOf(municipality))
             mapExtractor.extract(municipality.packageArea, mapFile)
             // Always written, even empty: the app tells a package without places from a damaged one.
             val placesFile = File(request.looseFilesDirectory, IndexBuilder.placesFileNameOf(municipality))
             placesFile.writeText(PlacesFileWriter.write(request.placesByMunicipality.getValue(municipality.id)))
-            return listOf(mapFile, placesFile)
+            return linkedMapOf(PackageFileKind.MAP to mapFile, PackageFileKind.PLACES to placesFile)
         }
 
         private fun writeBundle(
             bundle: File,
             partMunicipalities: List<Municipality>,
-            looseFiles: Map<Municipality, List<File>>,
-        ): Map<Municipality, List<TarEntry>> =
+            looseFiles: Map<Municipality, Map<PackageFileKind, File>>,
+        ): Map<Municipality, Map<PackageFileKind, TarEntry>> =
             TarWriter(bundle.outputStream().buffered(), DataVersion.epochSecondsOf(request.dataVersion)).use { tar ->
-                partMunicipalities.associateWith { municipality -> looseFiles.getValue(municipality).map(tar::add) }
+                partMunicipalities.associateWith { municipality ->
+                    looseFiles.getValue(municipality).mapValues { (_, file) -> tar.add(file) }
+                }
             }
     }
 
@@ -167,10 +186,8 @@ object BuiltPackagesSummary {
     private const val BYTES_PER_MEGABYTE = 1_000_000.0
 
     fun describe(built: BuiltPackages): String {
-        val sizes =
-            built.indexPart.packages.associateWith { indexedPackage ->
-                indexedPackage.files.sumOf { it.sizeBytes }
-            }
+        val packages = built.provinces.flatMap { it.packages }
+        val sizes = packages.associateWith { packageDetails -> packageDetails.files.sumOf { it.sizeBytes } }
         val largest = sizes.maxByOrNull { (_, size) -> size }
         val withoutPlaces =
             built.placeCounts
@@ -182,8 +199,8 @@ object BuiltPackagesSummary {
             "municipalities: ${sizes.size}",
             "places in packages: ${built.placeCounts.values.sum()}",
             "size: ${megabytes(sizes.values.sum())}",
-            largest?.let { (indexedPackage, size) ->
-                "largest: ${indexedPackage.id} ${indexedPackage.names.official} ${megabytes(size)}"
+            largest?.let { (packageDetails, size) ->
+                "largest: ${packageDetails.id} ${packageDetails.names.official} ${megabytes(size)}"
             },
             "without places: ${withoutPlaces.size}${if (withoutPlaces.isEmpty()) "" else " $withoutPlaces"}",
             "bundles: ${built.bundles.joinToString(", ") { bundle -> "${bundle.name} ${megabytes(bundle.length())}" }}",

@@ -19,7 +19,10 @@ class OfficialMunicipalitiesTest {
         val municipalities = OfficialSpreadsheetReader.read(gipuzkoaAndBizkaia())
 
         assertEquals(
-            listOf(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("48916", "Usansolo")),
+            listOf(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("48916", "Usansolo", "Bizkaia"),
+            ),
             municipalities,
         )
     }
@@ -36,6 +39,17 @@ class OfficialMunicipalitiesTest {
             )
         val bizkaia =
             sheetOf(
+                row(2, "A" to inline("Bizkaia")),
+                row(3, "A" to shared(2), "B" to shared(3), "C" to shared(4), "D" to shared(5)),
+                row(4, "A" to inline("48"), "B" to inline("916"), "C" to inline("2"), "D" to inline("Usansolo")),
+            )
+        return spreadsheetOf(shared, gipuzkoa, bizkaia)
+    }
+
+    @Test
+    fun aSheetWithoutTheNameOfItsProvinceGivesNoMunicipality() {
+        val withoutHeader =
+            sheetOf(
                 row(
                     4,
                     "A" to inline("48"),
@@ -44,7 +58,12 @@ class OfficialMunicipalitiesTest {
                     "D" to inline("Usansolo"),
                 ),
             )
-        return spreadsheetOf(shared, gipuzkoa, bizkaia)
+
+        assertFailsWith<IllegalArgumentException> {
+            OfficialSpreadsheetReader.read(
+                spreadsheetOf(emptyList(), withoutHeader),
+            )
+        }
     }
 
     @Test
@@ -58,27 +77,43 @@ class OfficialMunicipalitiesTest {
     fun theFileInTheRepositoryKeepsNamesWithCommasAndQuotes() {
         val municipalities =
             listOf(
-                OfficialMunicipality("44129", "Iglesuela del Cid, La"),
-                OfficialMunicipality("20045", "Irun \"Irún\""),
+                OfficialMunicipality("44129", "Iglesuela del Cid, La", "Teruel"),
+                OfficialMunicipality("20045", "Irun \"Irún\"", "Gipuzkoa"),
             )
 
         val text = OfficialMunicipalitiesFile.write(municipalities)
 
-        assertEquals("codigo_ine,nombre\n44129,\"Iglesuela del Cid, La\"\n20045,\"Irun \"\"Irún\"\"\"\n", text)
+        assertEquals(
+            listOf(
+                "codigo_ine,nombre,provincia",
+                "44129,\"Iglesuela del Cid, La\",\"Teruel\"",
+                "20045,\"Irun \"\"Irún\"\"\",\"Gipuzkoa\"",
+            ).joinToString("\n", postfix = "\n"),
+            text,
+        )
         assertEquals(municipalities, OfficialMunicipalitiesFile.read(text))
         assertFailsWith<IllegalArgumentException> {
-            OfficialMunicipalitiesFile.read("codigo_ine,nombre\n2004,\"Short code\"\n")
+            OfficialMunicipalitiesFile.read("codigo_ine,nombre,provincia\n2004,\"Short code\",\"Gipuzkoa\"\n")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            OfficialMunicipalitiesFile.read(
+                "codigo_ine,nombre\n20045,\"Irun\"\n",
+            )
         }
     }
 
     @Test
     fun listsTheMunicipalitiesWithoutBoundaryAndTheUnexpectedOnes() {
-        val official = listOf(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("20036", "Hondarribia"))
+        val official =
+            listOf(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("20036", "Hondarribia", "Gipuzkoa"),
+            )
         val inOpenStreetMap = listOf(municipality(), municipality("ES-20999", "Nuevo"))
 
         val check = MunicipalityCheck.of(inOpenStreetMap, official, provinces = null)
 
-        assertEquals(listOf(OfficialMunicipality("20036", "Hondarribia")), check.missing)
+        assertEquals(listOf(OfficialMunicipality("20036", "Hondarribia", "Gipuzkoa")), check.missing)
         assertEquals(listOf("ES-20999"), check.unexpected.map { it.id.value })
         assertEquals(
             """
@@ -96,7 +131,7 @@ class OfficialMunicipalitiesTest {
 
     @Test
     fun theReportListsTheMunicipalitiesCompletedFromOverpassWithTheReason() {
-        val official = listOf(OfficialMunicipality("51001", "Ceuta"))
+        val official = listOf(OfficialMunicipality("51001", "Ceuta", "Ciudad Autónoma de Ceuta"))
         val ceuta = municipality("ES-51001", "Ceuta").copy(completion = BoundaryCompletion(originalAdminLevel = "8"))
 
         val check = MunicipalityCheck.of(listOf(ceuta), official, provinces = null)
@@ -107,7 +142,11 @@ class OfficialMunicipalitiesTest {
 
     @Test
     fun aTrialRunComparesOnlyItsProvinces() {
-        val official = listOf(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("48020", "Bilbao"))
+        val official =
+            listOf(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("48020", "Bilbao", "Bizkaia"),
+            )
 
         val check = MunicipalityCheck.of(listOf(municipality()), official, provinces = setOf("20"))
 
@@ -117,7 +156,14 @@ class OfficialMunicipalitiesTest {
 
     @Test
     fun doesNotPublishWhenMoreThanOnePercentIsMissing() {
-        val official = (1..200).map { OfficialMunicipality("20${it.toString().padStart(3, '0')}", "Municipio $it") }
+        val official =
+            (1..200).map {
+                OfficialMunicipality(
+                    "20${it.toString().padStart(3, '0')}",
+                    "Municipio $it",
+                    "Gipuzkoa",
+                )
+            }
 
         fun withBoundaries(count: Int) = (1..count).map { municipality("ES-20${it.toString().padStart(3, '0')}") }
 

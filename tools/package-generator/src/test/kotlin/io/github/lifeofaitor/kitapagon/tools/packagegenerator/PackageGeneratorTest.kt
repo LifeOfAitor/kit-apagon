@@ -36,8 +36,7 @@ class PackageGeneratorTest {
         val arguments =
             (
                 "build-packages --boundaries b.geojsonseq --official o.csv --places p.geojsonseq --map spain.pmtiles " +
-                    "--data-version 2026-12-01 --address-template https://example.org/{file} " +
-                    "--output out --provinces 20"
+                    "--data-version 2026-12-01 --output out --provinces 20"
             ).split(" ")
 
         assertEquals(
@@ -48,7 +47,6 @@ class PackageGeneratorTest {
                 sourceMap = File("spain.pmtiles"),
                 provinces = "20",
                 dataVersion = "2026-12-01",
-                addressTemplate = "https://example.org/{file}",
                 output = File("out"),
             ),
             GeneratorCommand.parseOrNull(arguments),
@@ -57,10 +55,24 @@ class PackageGeneratorTest {
 
     @Test
     fun readsTheSignIndexCommand() {
+        val arguments =
+            (
+                "sign-index --parts parts --public-key key.txt --output published " +
+                    "--details-address https://e.org/{data_version}/{file} " +
+                    "--bundle-address https://e.org/{data_version}-ES-{province}/{file}"
+            ).split(" ")
+
         assertEquals(
-            GeneratorCommand.SignIndex(File("parts"), File("key.txt"), File("published")),
-            GeneratorCommand.parseOrNull("sign-index --parts parts --public-key key.txt --output published".split(" ")),
+            GeneratorCommand.SignIndex(
+                File("parts"),
+                File("key.txt"),
+                File("published"),
+                "https://e.org/{data_version}/{file}",
+                "https://e.org/{data_version}-ES-{province}/{file}",
+            ),
+            GeneratorCommand.parseOrNull(arguments),
         )
+        assertNull(parse("sign-index --parts parts --public-key key.txt --output published"))
     }
 
     @Test

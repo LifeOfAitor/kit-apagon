@@ -121,13 +121,17 @@ case "$command" in
         [[ "$province" == "${FAKE_FAILING_PROVINCE:-none}" ]] && { echo "broken province" >&2; exit 1; }
         mkdir -p "$output"
         echo "tar" > "${output}/ES-${province}.tar"
-        echo "{}" > "${output}/index-part.json" ;;
+        echo "{}" > "${output}/provincia-ES-${province}.json" ;;
     sign-index)
         output="$(option output "${arguments[@]}")"
         mkdir -p "$output"
-        echo "{}" > "${output}/index.json"
-        echo "signature" > "${output}/index.json.sig"
-        printf 'packages: 2\ndata version: %s\n' "$DATA_VERSION" ;;
+        # One compressed file per part it receives, so the tests see which provinces reached the index.
+        for part in "$(option parts "${arguments[@]}")"/*.json; do
+            echo "{}" > "${output}/$(basename "$part").gz"
+        done
+        echo "list" > "${output}/municipios.json.gz"
+        echo "signature" > "${output}/municipios.json.gz.sig"
+        printf 'packages: 2\nprovinces: 2\ndata version: %s\nlist: 5 bytes\n' "$DATA_VERSION" ;;
     obsolete-releases)
         printf '%s\n' ${FAKE_OBSOLETE:-} ;;
 esac
@@ -221,6 +225,13 @@ check "the map of each province is cut from the build of the day" \
     grep -q -- "pmtiles extract https://build.protomaps.com/20261202.pmtiles" "$log"
 check "it signs the index with the public key of the app" \
     grep -q -- "generator sign-index --parts .* --public-key ${full}/public-key.txt" "$log"
+check "the index points to the releases of the data repository" \
+    grep -q -F -- "--details-address https://github.com/LifeOfAitor/kit-apagon-datos/releases/download/{data_version}/{file} --bundle-address https://github.com/LifeOfAitor/kit-apagon-datos/releases/download/{data_version}-ES-{province}/{file}" "$log"
+index_release="$(grep "gh release create ${VERSION} " "$log" || true)"
+check "the index release carries the signed list, its signature and the report" \
+    bash -c "grep -q -- '/municipios.json.gz ' <<< '$index_release' && grep -q -- '/municipios.json.gz.sig ' <<< '$index_release' && grep -q -- '/informe.txt' <<< '$index_release'"
+check "the index release carries the details of every province" \
+    bash -c "grep -q -- '/provincia-ES-20.json.gz ' <<< '$index_release' && grep -q -- '/provincia-ES-48.json.gz ' <<< '$index_release'"
 check "it records the version in the data repository" \
     bash -c "git -C '${full}/remote.git' log -1 --format=%s | grep -q 'datos: publicar la versión ${VERSION}'"
 commit="$(git -C "${full}/remote.git" rev-parse HEAD 2> /dev/null)"

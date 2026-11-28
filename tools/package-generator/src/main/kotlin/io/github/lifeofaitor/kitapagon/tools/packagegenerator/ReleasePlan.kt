@@ -17,7 +17,7 @@ data class DataRelease(
         INDEX_TAG.matchEntire(tag)?.value
             ?: PROVINCE_TAG.matchEntire(tag)?.groupValues?.get(1)
 
-    /** The release of a month that holds index.json, once it is no longer a draft. */
+    /** The release of a month that holds the signed list of municipalities, once it is no longer a draft. */
     val isPublishedIndex: Boolean get() = INDEX_TAG.matches(tag) && !isDraft && !isPrerelease
 
     private companion object {

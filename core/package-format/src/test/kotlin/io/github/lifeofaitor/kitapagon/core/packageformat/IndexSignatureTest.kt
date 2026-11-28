@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class IndexSignatureTest {
     private val keyPair = indexSigningKeyPair()
-    private val indexBytes = PackageIndexWriter.write(packageIndex()).toByteArray()
+    private val indexBytes = GzipBytes.compress(MunicipalityListWriter.write(municipalityList()).toByteArray())
 
     @Test
     fun acceptsTheIndexSignedWithThePrivateKey() {
@@ -19,7 +19,10 @@ class IndexSignatureTest {
     @Test
     fun rejectsAnIndexChangedAfterSigning() {
         val signature = sign(indexBytes, keyPair.private)
-        val tampered = String(indexBytes).replace("Irun", "Iruñ").toByteArray()
+        val tampered =
+            indexBytes.copyOf().also { bytes ->
+                bytes[bytes.size / 2] = (bytes[bytes.size / 2] + 1).toByte()
+            }
 
         assertFalse(IndexSignature.isValid(tampered, signature, keyPair.public))
     }

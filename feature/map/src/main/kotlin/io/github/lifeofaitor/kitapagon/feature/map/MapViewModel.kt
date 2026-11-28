@@ -13,9 +13,12 @@ import io.github.lifeofaitor.kitapagon.core.packageformat.PlacesFileResult
 import io.github.lifeofaitor.kitapagon.core.packageformat.PmtilesHeaderReader
 import io.github.lifeofaitor.kitapagon.core.packageformat.PmtilesHeaderResult
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,12 +57,14 @@ data class PlacesInteraction(
 )
 
 /**
- * Shows the first installed package. Choosing among several packages arrives with the package
- * download, the third step of the map in decision 0010.
+ * Shows the first installed package, and loads it again each time [installedPackagesChanges] emits:
+ * its first value loads the map, and the next ones come when a download installs a package.
+ * Choosing among several packages arrives with decision 0017, part 3c-4.
  */
 class MapViewModel(
     private val installedPackages: InstalledPackages,
     private val ioDispatcher: CoroutineDispatcher,
+    installedPackagesChanges: Flow<Any?> = flowOf(Unit),
 ) : ViewModel() {
     private val mutableState = MutableStateFlow<MapScreenState>(MapScreenState.Loading)
     val state: StateFlow<MapScreenState> = mutableState.asStateFlow()
@@ -69,7 +74,9 @@ class MapViewModel(
 
     init {
         viewModelScope.launch {
-            mutableState.value = withContext(ioDispatcher) { loadFirstInstalledPackage() }
+            installedPackagesChanges.collectLatest {
+                mutableState.value = withContext(ioDispatcher) { loadFirstInstalledPackage() }
+            }
         }
     }
 

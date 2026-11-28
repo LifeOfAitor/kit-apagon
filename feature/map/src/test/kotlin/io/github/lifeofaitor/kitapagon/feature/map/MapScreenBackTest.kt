@@ -67,5 +67,6 @@ class MapScreenBackTest {
             onPlaceChosenInList = { requestedActions += "place chosen" },
             onListCategorySelected = { requestedActions += "category selected" },
             onCallPhone = { true },
+            onChooseMunicipality = { requestedActions += "choose municipality" },
         )
 }

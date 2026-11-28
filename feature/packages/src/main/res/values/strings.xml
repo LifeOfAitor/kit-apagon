@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="choose_title">Elige tu municipio</string>
+    <string name="choose_search_label">Nombre del municipio</string>
+    <string name="choose_loading_list">Descargando la lista de municipios…</string>
+    <string name="choose_list_no_connection">No se ha podido descargar la lista de municipios. Comprueba que tienes conexión e inténtalo de nuevo.</string>
+    <string name="choose_list_server">El servidor no ha enviado la lista de municipios. Inténtalo de nuevo más tarde.</string>
+    <string name="choose_list_not_signed">La lista de municipios recibida no es la auténtica y no se usará. Inténtalo de nuevo más tarde.</string>
+    <string name="choose_list_app_outdated">Esta versión de la app no entiende la lista de municipios. Actualiza la app.</string>
+    <string name="choose_retry">Reintentar</string>
+    <string name="choose_type_to_search">Escribe el nombre de tu municipio para buscarlo.</string>
+    <string name="choose_no_matches">No hay ningún municipio con ese nombre.</string>
+    <string name="choose_loading_details">Buscando el mapa de %1$s…</string>
+    <string name="choose_details_failed">No se ha podido preparar la descarga de %1$s. Comprueba que tienes conexión e inténtalo de nuevo.</string>
+    <string name="choose_municipality_and_province">%1$s (%2$s)</string>
+    <string name="choose_download_size">Tamaño de la descarga: %1$s</string>
+    <string name="choose_privacy">Al descargar, GitHub verá la dirección IP de tu móvil.</string>
+    <string name="choose_download">Descargar</string>
+    <string name="choose_other_municipality">Elegir otro</string>
+    <string name="choose_cancel_download">Cancelar la descarga</string>
+    <string name="choose_waiting">Esperando conexión para descargar el mapa…</string>
+    <string name="choose_downloading">Descargando: %1$s de %2$s</string>
+    <string name="choose_downloading_starting">Empezando la descarga…</string>
+    <string name="choose_failed_no_connection">Se ha perdido la conexión varias veces. Inténtalo de nuevo cuando tengas mejor cobertura.</string>
+    <string name="choose_failed_server">El servidor no ha enviado el mapa. Inténtalo de nuevo más tarde.</string>
+    <string name="choose_failed_damaged">El mapa ha llegado dañado y no se ha instalado. Inténtalo de nuevo más tarde.</string>
+    <string name="choose_failed_storage">El móvil no ha podido guardar el mapa.</string>
+    <string name="choose_failed_not_enough_space">No hay espacio suficiente. Libera %1$s en el móvil e inténtalo de nuevo.</string>
+    <string name="choose_installed">Mapa instalado.</string>
+    <string name="choose_cancelled">Descarga cancelada.</string>
+    <string name="choose_try_again">Intentarlo de nuevo</string>
+
+    <string name="download_notification_channel">Descargas de mapas</string>
+    <string name="download_notification_title">Descargando el mapa de %1$s</string>
+    <string name="download_notification_cancel">Cancelar</string>
+</resources>

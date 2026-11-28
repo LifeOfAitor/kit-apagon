@@ -11,6 +11,7 @@ import io.github.lifeofaitor.kitapagon.feature.map.TestPlaces.IRUN_AREA
 import io.github.lifeofaitor.kitapagon.feature.map.TestPlaces.PHARMACY
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -48,6 +49,23 @@ class MapViewModelTest {
             createViewModel().state.test {
                 assertEquals(MapScreenState.Loading, awaitItem())
                 assertEquals(MapScreenState.NoPackageInstalled, awaitItem())
+            }
+        }
+
+    @Test
+    fun showsAPackageAsSoonAsADownloadInstallsIt() =
+        runTest(testDispatcher) {
+            val installedPackagesChanges = MutableStateFlow(0)
+            val viewModel =
+                MapViewModel(InstalledPackages(temporaryFolder.root), testDispatcher, installedPackagesChanges)
+            viewModel.state.test {
+                assertEquals(MapScreenState.Loading, awaitItem())
+                assertEquals(MapScreenState.NoPackageInstalled, awaitItem())
+
+                installMap(validHeader(IRUN_AREA))
+                installedPackagesChanges.value = 1
+
+                assertEquals(IRUN, (awaitItem() as MapScreenState.Ready).packageId)
             }
         }
 

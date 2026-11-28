@@ -46,6 +46,18 @@ class KitApagonNavigationTest {
         composeRule.onNodeWithText(HOME_TEXT).assertIsDisplayed()
     }
 
+    @Test
+    fun choosingAMunicipalityFromTheMapReturnsToTheMapOnceInstalled() {
+        showNavigation()
+        composeRule.onNodeWithText(OPEN_MAP_TEXT).performClick()
+        composeRule.onNodeWithText(CHOOSE_TEXT).performClick()
+        composeRule.onNodeWithText(CHOOSE_SCREEN_TEXT).assertIsDisplayed()
+
+        composeRule.onNodeWithText(INSTALLED_TEXT).performClick()
+
+        composeRule.onNodeWithText(MAP_TEXT).assertIsDisplayed()
+    }
+
     private fun showNavigation() {
         composeRule.setContent {
             KitApagonNavigation(
@@ -53,7 +65,14 @@ class KitApagonNavigationTest {
                     Text(HOME_TEXT)
                     Button(onClick = onOpenMap) { Text(OPEN_MAP_TEXT) }
                 },
-                mapScreen = { Text(MAP_TEXT) },
+                mapScreen = { onChooseMunicipality ->
+                    Text(MAP_TEXT)
+                    Button(onClick = onChooseMunicipality) { Text(CHOOSE_TEXT) }
+                },
+                chooseMunicipalityScreen = { onInstalled ->
+                    Text(CHOOSE_SCREEN_TEXT)
+                    Button(onClick = onInstalled) { Text(INSTALLED_TEXT) }
+                },
             )
         }
     }
@@ -62,5 +81,8 @@ class KitApagonNavigationTest {
         const val HOME_TEXT = "fake home"
         const val OPEN_MAP_TEXT = "open map"
         const val MAP_TEXT = "fake map"
+        const val CHOOSE_TEXT = "choose municipality"
+        const val CHOOSE_SCREEN_TEXT = "fake choose municipality"
+        const val INSTALLED_TEXT = "installed"
     }
 }

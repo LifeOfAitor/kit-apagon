@@ -90,6 +90,22 @@ class PackageGeneratorTest {
     }
 
     @Test
+    fun readsTheCommandsThatCompleteBoundariesFromOverpass() {
+        assertEquals(
+            GeneratorCommand.MissingBoundaries(File("b"), File("o.csv")),
+            parse("missing-boundaries --boundaries b --official o.csv"),
+        )
+        assertEquals(
+            GeneratorCommand.MissingBoundaries(File("b"), File("o.csv"), "20"),
+            parse("missing-boundaries --boundaries b --official o.csv --provinces 20"),
+        )
+        assertEquals(
+            GeneratorCommand.CompleteBoundaries(File("b"), File("o.csv"), File("x"), File("c")),
+            parse("complete-boundaries --boundaries b --official o.csv --overpass x --output c"),
+        )
+    }
+
+    @Test
     fun rejectsAnyOtherCommandLine() {
         assertNull(GeneratorCommand.parseOrNull(listOf()))
         assertNull(GeneratorCommand.parseOrNull(listOf("places", "only-input.geojson")))

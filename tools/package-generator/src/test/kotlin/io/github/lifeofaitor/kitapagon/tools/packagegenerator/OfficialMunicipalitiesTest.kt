@@ -85,12 +85,24 @@ class OfficialMunicipalitiesTest {
             Municipios de la relación oficial del INE: 2
             Sin límite en OpenStreetMap, y por tanto sin paquete: 1
             - 20036 Hondarribia
+            Con el contorno pedido a Overpass porque el extracto no lo daba: 0
             Con un código que no está en la relación oficial: 1
             - 20999 Nuevo
             Relación oficial: elaboración propia con datos extraídos del sitio web del INE: www.ine.es
             """.trimIndent(),
             check.report(),
         )
+    }
+
+    @Test
+    fun theReportListsTheMunicipalitiesCompletedFromOverpassWithTheReason() {
+        val official = listOf(OfficialMunicipality("51001", "Ceuta"))
+        val ceuta = municipality("ES-51001", "Ceuta").copy(completion = BoundaryCompletion(originalAdminLevel = "8"))
+
+        val check = MunicipalityCheck.of(listOf(ceuta), official, provinces = null)
+
+        assertEquals(listOf(ceuta), check.completed)
+        assertTrue("- 51001 Ceuta: contorno incompleto en el extracto" in check.report())
     }
 
     @Test

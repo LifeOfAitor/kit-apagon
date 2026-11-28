@@ -35,6 +35,8 @@ class GeneratorCommandRunner(
             is GeneratorCommand.NewSigningKey -> indexCommands.newSigningKey(command)
             is GeneratorCommand.OfficialMunicipalities -> publicationCommands.officialMunicipalities(command)
             is GeneratorCommand.CheckMunicipalities -> publicationCommands.checkMunicipalities(command)
+            is GeneratorCommand.MissingBoundaries -> publicationCommands.missingBoundaries(command)
+            is GeneratorCommand.CompleteBoundaries -> publicationCommands.completeBoundaries(command)
             is GeneratorCommand.ReleaseLeftovers -> publicationCommands.releaseLeftovers(command)
             is GeneratorCommand.ObsoleteReleases -> publicationCommands.obsoleteReleases(command)
         }

@@ -83,3 +83,58 @@ export_generator_inputs() {
         "${output_directory}/candidates.osm.pbf" -o "${output_directory}/places.geojsonseq"
     rm -f "${output_directory}/boundaries.osm.pbf" "${output_directory}/candidates.osm.pbf"
 }
+
+# Overpass refuses requests that do not say who sends them (investigation 10, section 14). The
+# identification is the public address of the data repository, as decided with the owner (decision 0016).
+readonly OVERPASS_URL="https://overpass-api.de/api/interpreter"
+readonly OVERPASS_USER_AGENT="kit-apagon-datos (+https://github.com/LifeOfAitor/kit-apagon-datos)"
+# More missing municipalities than this means a broken extract, not a few broken boundaries.
+readonly MAXIMUM_OVERPASS_QUERIES=20
+
+# Writes the relations with an INE code, with every way and node they need to be drawn.
+overpass_relations_by_ine_code() {
+    local code="$1"
+    local output_file="$2"
+    curl --fail --silent --show-error --max-time 180 --retry 2 --retry-connrefused \
+        --retry-delay "${DOWNLOAD_RETRY_DELAY_SECONDS:-30}" --user-agent "$OVERPASS_USER_AGENT" --output "$output_file" \
+        --data-urlencode "data=[out:xml][timeout:120];relation[\"ine:municipio\"=\"${code}\"];(._;>;);out body;" "$OVERPASS_URL"
+}
+
+# Completes from Overpass the boundaries of the official municipalities that the extract could not give,
+# and appends them to the boundaries file (decision 0016). A municipality Overpass does not give stays
+# without a package that month; only a failure of the generator stops the script. The provinces, such
+# as 01,20,48, limit the check to the ones a regional extract covers; empty means all of them.
+complete_missing_boundaries() {
+    local generator="$1"
+    local boundaries_file="$2"
+    local official_file="$3"
+    local overpass_directory="$4"
+    local provinces="${5:-}"
+    local missing_codes code
+    missing_codes="$("$generator" missing-boundaries --boundaries "$boundaries_file" --official "$official_file" \
+        ${provinces:+--provinces "$provinces"})" || return 1
+    if [[ -z "$missing_codes" ]]; then
+        echo "Every official municipality has its boundary in the extract." >&2
+        return 0
+    fi
+    if [[ "$(wc -w <<< "$missing_codes")" -gt "$MAXIMUM_OVERPASS_QUERIES" ]]; then
+        echo "More than ${MAXIMUM_OVERPASS_QUERIES} municipalities without a boundary: Overpass is not asked." >&2
+        return 0
+    fi
+    mkdir -p "$overpass_directory" || return 1
+    : > "${overpass_directory}/relations.geojsonseq"
+    for code in $missing_codes; do
+        echo "Asking Overpass for the boundary of ${code}" >&2
+        if overpass_relations_by_ine_code "$code" "${overpass_directory}/${code}.osm" \
+            && osmium export --overwrite --geometry-types=polygon -f geojsonseq \
+                "${overpass_directory}/${code}.osm" -o "${overpass_directory}/${code}.geojsonseq"; then
+            cat "${overpass_directory}/${code}.geojsonseq" >> "${overpass_directory}/relations.geojsonseq"
+        else
+            echo "Overpass did not give the boundary of ${code}; it stays without a package." >&2
+        fi
+    done
+    "$generator" complete-boundaries --boundaries "$boundaries_file" --official "$official_file" \
+        --overpass "${overpass_directory}/relations.geojsonseq" --output "${overpass_directory}/completed.geojsonseq" \
+        ${provinces:+--provinces "$provinces"} || return 1
+    cat "${overpass_directory}/completed.geojsonseq" >> "$boundaries_file"
+}

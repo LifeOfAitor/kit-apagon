@@ -16,9 +16,12 @@ Estas librerías forman parte del APK que recibe el usuario.
 | MapLibre Native para Android | 13.7.1 | BSD-2-Clause | Dibujo del mapa |
 | MapLibre Java (geojson y turf), incluida por MapLibre | 6.0.1 | MIT | Geometrías del mapa |
 | MapLibre Gestures, incluida por MapLibre | 0.0.4 | BSD-2-Clause | Gestos sobre el mapa |
-| OkHttp, incluida por MapLibre | 4.12.0 | Apache-2.0 | La usa MapLibre internamente; la app tiene la red desactivada para el mapa |
-| OkHttp | 5.5.1 | Apache-2.0 | Descargar la lista de municipios y los paquetes (`core:package-download`, decisión 0017). Llegará al APK con la parte 3c-3 y sustituirá a la 4.12.0 que pide MapLibre, que solo usa clases y métodos que siguen igual en la 5.5.1 (comprobado el 2026-11-28) |
-| Okio, incluida por OkHttp | 3.6.0; 3.18.1 con OkHttp 5.5.1 | Apache-2.0 | Lectura y escritura de datos dentro de OkHttp |
+| OkHttp | 5.5.1 | Apache-2.0 | Descargar la lista de municipios y los paquetes (`core:package-download`, decisión 0017). Sustituye a la 4.12.0 que pide MapLibre, que solo usa clases y métodos que siguen igual en la 5.5.1 (comprobado el 2026-11-28); la app tiene la red desactivada para el mapa |
+| Okio, incluida por OkHttp | 3.18.1 | Apache-2.0 | Lectura y escritura de datos dentro de OkHttp |
+| AndroidX WorkManager (`work-runtime`) | 2.12.0 | Apache-2.0 | Descargar los paquetes en segundo plano (decisión 0017). Sin `work-analytics`, comprobado en el árbol de dependencias |
+| AndroidX Room y SQLite, incluidas por WorkManager | 2.7.0 y 2.5.0 | Apache-2.0 | La base de datos interna de WorkManager con sus trabajos pendientes |
+| AndroidX App Startup, Tracing y Concurrent Futures, incluidas por WorkManager | 1.2.0, 1.2.0 y 1.1.0 | Apache-2.0 | Arranque de WorkManager, marcas de rendimiento que solo se leen en el propio móvil con herramientas de desarrollo, y tareas asíncronas |
+| Guava `listenablefuture`, incluida por WorkManager | 1.0 | Apache-2.0 | Una sola interfaz para tareas asíncronas |
 | Timber, incluida por MapLibre | 5.0.1 | Apache-2.0 | Registros internos de MapLibre |
 | kotlinx.coroutines, incluida por AndroidX | 1.10.2 | Apache-2.0 | Tareas en segundo plano |
 | kotlinx-serialization-json | 1.13.0 | Apache-2.0 | Leer el archivo de lugares de cada paquete |
@@ -49,6 +52,7 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | Turbine | 1.2.1 | Apache-2.0 | Tests de flujos de datos |
 | Kotest (solo `kotest-property`) | 6.2.7 | Apache-2.0 | Pruebas basadas en propiedades del formato de los paquetes, de su descarga y del generador |
 | MockWebServer 3 | 5.5.1 | Apache-2.0 | Servidor de prueba para la descarga de los paquetes (`core:package-download`) |
+| AndroidX WorkManager Testing | 2.12.0 | Apache-2.0 | Tests del trabajo de descarga en segundo plano |
 | Robolectric | 4.18.1 | MIT | Tests de Android sin emulador |
 | AndroidX Test (core, ext-junit) y Compose UI Test | 1.7.0, 1.3.0 y BOM | Apache-2.0 | Tests |
 | Kover | 0.9.11 | Apache-2.0 | Cobertura de tests |

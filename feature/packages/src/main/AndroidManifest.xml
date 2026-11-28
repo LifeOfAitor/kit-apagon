@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Only to download the municipal packages; everything else works without network (principle 6). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        Up to Android 11, WorkManager runs the urgent download as a foreground service with a
+        notification; from Android 14 that service must say what it is for (decision 0017). The
+        permission to show notifications is not asked for: the progress is visible in the app.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <application>
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+    </application>
+</manifest>

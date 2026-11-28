@@ -99,3 +99,17 @@ fun indexSigningKeyPair(): KeyPair =
         initialize(ECGenParameterSpec("secp256r1"))
         generateKeyPair()
     }
+
+/** What the app keeps about Irun once it is installed. */
+fun installedPackageInfo(dataVersion: String = TEST_DATA_VERSION): InstalledPackageInfo {
+    val details = packageDetails()
+    return InstalledPackageInfo(
+        id = details.id,
+        names = details.names,
+        provinceCode = "20",
+        provinceName = "Gipuzkoa",
+        dataVersion = dataVersion,
+        bounds = details.bounds,
+        centre = details.centre,
+    )
+}

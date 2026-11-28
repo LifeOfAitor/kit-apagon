@@ -54,13 +54,39 @@ class InstalledPackagesTest {
     @Test
     fun ignoresDirectoriesAndFilesThatAreNotPackages() {
         installPackage("temporary-download")
+        installPackage(".downloads")
         File(packagesDirectory, "ES-20045").writeText("a file, not a package directory")
 
         assertEquals(emptyList(), InstalledPackages(packagesDirectory).list())
     }
 
-    private fun installPackage(directoryName: String) {
+    @Test
+    fun readsTheDataOfEachPackageTheAppInstalled() {
+        val info = installedPackageInfo()
+        installPackage(
+            "ES-20045",
+        ).resolve(InstalledPackages.INFO_FILE_NAME).writeText(InstalledPackageInfoWriter.write(info))
+
+        assertEquals(info, InstalledPackages(packagesDirectory).list().single().info)
+    }
+
+    @Test
+    fun aPackageWithoutDataOrWithDamagedDataIsStillListed() {
+        installPackage("ES-20045")
+        installPackage("ES-48020").resolve(InstalledPackages.INFO_FILE_NAME).writeText("{\"format_version\":1")
+
+        assertEquals(listOf(null, null), InstalledPackages(packagesDirectory).list().map { it.info })
+    }
+
+    @Test
+    fun namesEachKindOfFileAsTheDeviceStoresIt() {
+        assertEquals("map.pmtiles", InstalledPackages.fileNameOf(PackageFileKind.MAP))
+        assertEquals("places.json", InstalledPackages.fileNameOf(PackageFileKind.PLACES))
+    }
+
+    private fun installPackage(directoryName: String): File {
         val packageDirectory = File(packagesDirectory, directoryName).apply { mkdirs() }
         File(packageDirectory, InstalledPackages.MAP_FILE_NAME).writeBytes(validHeader())
+        return packageDirectory
     }
 }

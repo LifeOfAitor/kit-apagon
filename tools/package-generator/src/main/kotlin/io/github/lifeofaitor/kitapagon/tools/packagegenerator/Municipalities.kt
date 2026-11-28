@@ -18,6 +18,8 @@ data class Municipality(
     /** The municipality itself, without margin. */
     val bounds: GeographicBounds,
     val centre: GeographicPoint,
+    /** Set when the boundary had to be completed from Overpass (decision 0016). */
+    val completion: BoundaryCompletion? = null,
 ) {
     /** What the package covers: the municipality plus the margin of decision 0006. */
     val packageArea: GeographicBounds get() = bounds.expandedBy(PACKAGE_MARGIN_KILOMETRES)
@@ -55,7 +57,14 @@ object MunicipalityReader {
         val name = tags["name"]
         val location = (featureObject["geometry"] as? JsonObject)?.let(::locationOf)
         return if (id != null && name != null && location != null) {
-            Municipality(id, namesOf(name, tags), provinceCodeOf(id), location.first, location.second)
+            Municipality(
+                id,
+                namesOf(name, tags),
+                provinceCodeOf(id),
+                location.first,
+                location.second,
+                BoundaryCompletion.from(tags),
+            )
         } else {
             null
         }

@@ -73,6 +73,33 @@ class PublicationCommandsTest {
         }
     }
 
+    @Test
+    fun printsTheOfficialMunicipalitiesWithoutABoundaryAndCompletesThemFromOverpass() {
+        val official = officialFile(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("51001", "Ceuta"))
+        val ceutaBounds = GeographicBounds(-5.42346, 35.87086, -5.2783, 35.918)
+        val overpass =
+            File(temporaryDirectory, "overpass.geojsonseq").apply {
+                writeText(boundaryLine(ceutaBounds, municipalityTags("51001", "Ceuta")) + "\n")
+            }
+        val completed = File(temporaryDirectory, "completed.geojsonseq")
+
+        runner.run(GeneratorCommand.MissingBoundaries(boundaries, official))
+        runner.run(GeneratorCommand.CompleteBoundaries(boundaries, official, overpass, completed))
+
+        assertEquals(listOf("51001", "completed: 1 of 1"), printed)
+        val ceuta = MunicipalityReader.read(completed.readLines().asSequence()).single()
+        assertEquals(BoundaryCompletion(originalAdminLevel = "8"), ceuta.completion)
+    }
+
+    @Test
+    fun aRegionalExtractOnlyLooksForTheMissingMunicipalitiesOfItsProvinces() {
+        val official = officialFile(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("51001", "Ceuta"))
+
+        runner.run(GeneratorCommand.MissingBoundaries(boundaries, official, provinces = "20"))
+
+        assertEquals(emptyList(), printed)
+    }
+
     private fun officialFile(vararg municipalities: OfficialMunicipality): File =
         File(temporaryDirectory, "municipios.csv").apply {
             writeText(OfficialMunicipalitiesFile.write(municipalities.toList()))

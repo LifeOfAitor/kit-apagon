@@ -68,6 +68,22 @@ sealed interface GeneratorCommand {
         val report: File,
     ) : GeneratorCommand
 
+    /** Prints the code of every official municipality without a boundary of level 8, one per line. */
+    data class MissingBoundaries(
+        val boundaries: File,
+        val official: File,
+        val provinces: String? = null,
+    ) : GeneratorCommand
+
+    /** Writes the boundaries of missing municipalities from the relations Overpass returned (decision 0016). */
+    data class CompleteBoundaries(
+        val boundaries: File,
+        val official: File,
+        val overpass: File,
+        val output: File,
+        val provinces: String? = null,
+    ) : GeneratorCommand
+
     /** Prints the releases left by a failed run of [dataVersion], to delete before starting again. */
     data class ReleaseLeftovers(
         val releases: File,
@@ -95,6 +111,9 @@ sealed interface GeneratorCommand {
               new-signing-key --output DIRECTORY
               official-municipalities --spreadsheet 26codmun.xlsx --output FILE
               check-municipalities --boundaries FILE --official FILE --report FILE [--provinces 01,20,48]
+              missing-boundaries --boundaries FILE --official FILE [--provinces 01,20,48]
+              complete-boundaries --boundaries FILE --official FILE --overpass FILE --output FILE
+                                  [--provinces 01,20,48]
               release-leftovers --releases FILE --data-version YYYY-MM-DD
               obsolete-releases --releases FILE --keep 2
             Boundaries and places are osmium exports in the geojsonseq format. Official is the list of
@@ -179,6 +198,20 @@ sealed interface GeneratorCommand {
                             it.file("official"),
                             it.optional("provinces"),
                             it.file("report"),
+                        )
+                    },
+                "missing-boundaries" to
+                    Specification(setOf("boundaries", "official"), setOf("provinces")) {
+                        MissingBoundaries(it.file("boundaries"), it.file("official"), it.optional("provinces"))
+                    },
+                "complete-boundaries" to
+                    Specification(setOf("boundaries", "official", "overpass", "output"), setOf("provinces")) {
+                        CompleteBoundaries(
+                            it.file("boundaries"),
+                            it.file("official"),
+                            it.file("overpass"),
+                            it.file("output"),
+                            it.optional("provinces"),
                         )
                     },
                 "release-leftovers" to

@@ -191,6 +191,8 @@ data class MunicipalityCheck(
     /** In OpenStreetMap with a code the official list does not have, such as a newly created municipality. */
     val unexpected: List<Municipality>,
     val expectedCount: Int,
+    /** Official municipalities whose boundary had to come from Overpass (decision 0016). */
+    val completed: List<Municipality> = emptyList(),
 ) {
     /** False when so many are missing that the extract or the boundaries are probably broken. */
     val isPublishable: Boolean get() = missing.size <= expectedCount * MAXIMUM_MISSING_FRACTION
@@ -201,6 +203,12 @@ data class MunicipalityCheck(
             add("Municipios de la relación oficial del INE: $expectedCount")
             add("Sin límite en OpenStreetMap, y por tanto sin paquete: ${missing.size}")
             missing.forEach { add("- ${it.code} ${it.name}") }
+            add("Con el contorno pedido a Overpass porque el extracto no lo daba: ${completed.size}")
+            completed.forEach {
+                add(
+                    "- ${it.id.value.removePrefix("ES-")} ${it.names.official}: ${it.completion?.reason}",
+                )
+            }
             add("Con un código que no está en la relación oficial: ${unexpected.size}")
             unexpected.forEach { add("- ${it.id.value.removePrefix("ES-")} ${it.names.official}") }
             add("Relación oficial: elaboración propia con datos extraídos del sitio web del INE: www.ine.es")
@@ -222,6 +230,11 @@ data class MunicipalityCheck(
                 missing = expected.filter { it.code !in osmCodes },
                 unexpected = municipalities.filter { it.id.value.removePrefix("ES-") !in officialCodes },
                 expectedCount = expected.size,
+                completed =
+                    municipalities.filter {
+                        it.completion != null &&
+                            it.id.value.removePrefix("ES-") in officialCodes
+                    },
             )
         }
     }

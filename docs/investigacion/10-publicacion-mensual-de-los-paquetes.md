@@ -1,7 +1,7 @@
 # Investigación: publicación mensual de los paquetes en GitHub
 
-Fecha: 2026-11-26. Estado: sexta revisión, con la primera versión completa (apartados 10 a 13,
-2026-11-27).
+Fecha: 2026-11-26. Estado: séptima revisión, con las causas de los municipios sin paquete (apartado 14,
+2026-11-28).
 
 ## Pregunta
 
@@ -224,6 +224,31 @@ falla con un borrador, que no tiene etiqueta (corregido en la pull request 11).
   de Gran Canaria, Santa Cruz de Tenerife y Melilla llegan por descarga parcial con la respuesta 206,
   el rango exacto y la huella del índice.
 
+## 14. Por qué faltan Ceuta, Casariche y Campo
+
+2026-11-28.
+
+- **Casariche** (relación 346959): la versión 13, del 24 de noviembre de 2026 (conjunto de cambios
+  192410286, comentado "ww", hecho con iD), cambió `admin_level` de 8 a 7. Desde 2024 tenía el 8.
+- **Campo** (relación 348881): la versión 14, del 12 de noviembre de 2026 (conjunto de cambios 191849055,
+  comentado "atualização"), le quitó `boundary=administrative` y `admin_level=8`. El mismo cambio tocó el
+  Eje Pirenaico, que pasa por el municipio, y una vía de tren en Portugal. Ninguno de los dos conjuntos de
+  cambios tiene comentarios de otros usuarios.
+- **Ceuta** (relación 1822781): está bien etiquetada, pero el extracto de Geofabrik no tiene 4 de sus 14
+  tramos. Son costa de Benzú, junto a la frontera con Marruecos, que también marca la frontera nacional
+  (`admin_level=2`). Ocurre en el extracto de España y en el propio de Ceuta.
+- **Con la relación completa,** osmium construye los tres contornos:
+  - Ceuta mide `[-5.42346, 35.87086, -5.2783, 35.918]`, igual con la API principal que con Overpass;
+  - Casariche y Campo también se construyen, con su etiquetado actual.
+- **Normas de uso:**
+  - La API principal de OpenStreetMap "is provided in order to edit the map data, not for read-only
+    purposes": no sirve para el trabajo mensual.
+  - Overpass pide no pasar de unas 10.000 consultas y 1 GB al día.
+  - Overpass rechaza con un 406 las consultas que llegan con el identificador por defecto de `curl` y
+    acepta las que se identifican.
+  - Cada consulta de un municipio por su código tarda entre 25 y 33 segundos.
+- Propuesta: decisión 0016.
+
 ## Fuentes
 
 - https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
@@ -241,3 +266,6 @@ falla con un borrador, que no tiene etiqueta (corregido en la pull request 11).
 - Prueba propia de descargas parciales con `curl -r`, 2026-11-26.
 - https://github.com/gsueur/osm-geoparquet/pull/201 y https://github.com/gsueur/osm-geoparquet/pull/205
 - https://github.com/patricebender/resupply-karoo/pull/160
+- https://operations.osmfoundation.org/policies/api/
+- https://dev.overpass-api.de/overpass-doc/en/preface/commons.html
+- Historial de las relaciones 346959 y 348881 y conjuntos de cambios 192410286 y 191849055 en la API de OpenStreetMap, consultados el 2026-11-28.

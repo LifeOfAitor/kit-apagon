@@ -12,16 +12,18 @@ class ImportPushedPackageFilesTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun installsThePushedMapAndPlacesAsOnePackage() {
+    fun installsThePushedFilesAsOnePackage() {
         val pushed = temporaryFolder.newFolder("pushed")
         val packages = temporaryFolder.newFolder("packages")
         File(pushed, "ES-20045.pmtiles").writeText("map")
         File(pushed, "ES-20045.places.json").writeText("places")
+        File(pushed, "ES-20045.package.json").writeText("data")
 
         importPushedPackageFiles(pushed, packages)
 
         assertEquals("map", File(packages, "ES-20045/map.pmtiles").readText())
         assertEquals("places", File(packages, "ES-20045/places.json").readText())
+        assertEquals("data", File(packages, "ES-20045/package.json").readText())
         assertEquals(0, pushed.listFiles()?.size)
     }
 

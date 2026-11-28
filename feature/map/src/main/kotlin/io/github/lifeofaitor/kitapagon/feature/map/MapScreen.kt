@@ -34,6 +34,7 @@ import io.github.lifeofaitor.kitapagon.core.ui.theme.TouchTargets
 fun MapScreen(
     viewModel: MapViewModel,
     onCallPhone: (String) -> Boolean,
+    onChooseMunicipality: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -41,7 +42,7 @@ fun MapScreen(
     MapScreenContent(
         state = state,
         interaction = interaction,
-        actions = MapScreenActions.of(viewModel, onCallPhone),
+        actions = MapScreenActions.of(viewModel, onCallPhone, onChooseMunicipality),
         modifier = modifier,
     ) { readyState, selectedPlace -> OfflineMap(readyState, selectedPlace, onPlaceTapped = viewModel::selectPlace) }
 }
@@ -54,11 +55,13 @@ internal data class MapScreenActions(
     val onPlaceChosenInList: (Place) -> Unit,
     val onListCategorySelected: (PlaceCategory?) -> Unit,
     val onCallPhone: (String) -> Boolean,
+    val onChooseMunicipality: () -> Unit,
 ) {
     companion object {
         fun of(
             viewModel: MapViewModel,
             onCallPhone: (String) -> Boolean,
+            onChooseMunicipality: () -> Unit,
         ) = MapScreenActions(
             onShowMap = viewModel::showMap,
             onShowList = viewModel::showList,
@@ -66,6 +69,7 @@ internal data class MapScreenActions(
             onPlaceChosenInList = viewModel::showPlaceOnMap,
             onListCategorySelected = viewModel::filterListBy,
             onCallPhone = onCallPhone,
+            onChooseMunicipality = onChooseMunicipality,
         )
     }
 }
@@ -86,7 +90,12 @@ internal fun MapScreenContent(
             }
 
             MapScreenState.NoPackageInstalled -> {
-                CenteredMessage(stringResource(R.string.map_no_package_installed))
+                CenteredMessage(stringResource(R.string.map_no_package_installed)) {
+                    Button(
+                        onClick = actions.onChooseMunicipality,
+                        modifier = Modifier.heightIn(min = TouchTargets.minimum),
+                    ) { Text(stringResource(R.string.map_choose_municipality)) }
+                }
             }
 
             is MapScreenState.PackageDamaged -> {
@@ -228,16 +237,21 @@ private fun MapAttribution() {
 }
 
 @Composable
-private fun CenteredMessage(message: String) {
-    Box(
+private fun CenteredMessage(
+    message: String,
+    action: @Composable () -> Unit = {},
+) {
+    Column(
         modifier =
             Modifier
                 .fillMaxSize()
                 .safeDrawingPadding()
                 .padding(Spacing.large),
-        contentAlignment = Alignment.Center,
+        verticalArrangement = Arrangement.spacedBy(Spacing.medium, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(text = message, style = MaterialTheme.typography.bodyLarge)
+        action()
     }
 }
 

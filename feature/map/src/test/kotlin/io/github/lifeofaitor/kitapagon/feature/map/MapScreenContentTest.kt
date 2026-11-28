@@ -24,10 +24,12 @@ class MapScreenContentTest {
     private val requestedActions = mutableListOf<String>()
 
     @Test
-    fun explainsWhenNoMapIsInstalled() {
+    fun explainsWhenNoMapIsInstalledAndOffersToChooseTheMunicipality() {
         showContent(MapScreenState.NoPackageInstalled)
 
         composeRule.onNodeWithText("Todavía no hay ningún mapa instalado", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Elegir municipio").performClick()
+        assertEquals(listOf("choose municipality"), requestedActions)
     }
 
     @Test
@@ -104,6 +106,7 @@ class MapScreenContentTest {
             onPlaceChosenInList = { requestedActions += "place chosen" },
             onListCategorySelected = { requestedActions += "category selected" },
             onCallPhone = { true },
+            onChooseMunicipality = { requestedActions += "choose municipality" },
         )
 
     private companion object {

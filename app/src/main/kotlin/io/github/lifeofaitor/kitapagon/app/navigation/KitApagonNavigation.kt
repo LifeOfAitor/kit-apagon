@@ -19,7 +19,8 @@ import androidx.navigation3.ui.NavDisplay
 @Composable
 fun KitApagonNavigation(
     homeScreen: @Composable (onOpenMap: () -> Unit) -> Unit,
-    mapScreen: @Composable () -> Unit,
+    mapScreen: @Composable (onChooseMunicipality: () -> Unit) -> Unit,
+    chooseMunicipalityScreen: @Composable (onInstalled: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val backStack = rememberAppBackStack()
@@ -34,8 +35,20 @@ fun KitApagonNavigation(
             ),
         entryProvider = { destination ->
             when (destination) {
-                AppDestination.HOME -> NavEntry(destination) { homeScreen { backStack.add(AppDestination.MAP) } }
-                AppDestination.MAP -> NavEntry(destination) { mapScreen() }
+                AppDestination.HOME -> {
+                    NavEntry(destination) { homeScreen { backStack.add(AppDestination.MAP) } }
+                }
+
+                AppDestination.MAP -> {
+                    NavEntry(destination) { mapScreen { backStack.add(AppDestination.CHOOSE_MUNICIPALITY) } }
+                }
+
+                // Once installed, the map that offered the download shows the new package.
+                AppDestination.CHOOSE_MUNICIPALITY -> {
+                    NavEntry(
+                        destination,
+                    ) { chooseMunicipalityScreen { backStack.remove(AppDestination.CHOOSE_MUNICIPALITY) } }
+                }
             }
         },
     )

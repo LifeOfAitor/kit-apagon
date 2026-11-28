@@ -51,6 +51,7 @@ Qué implica, qué se gana, qué se pierde y qué queda pendiente.
 | 0014 | Publicación mensual de los paquetes | Aceptada |
 | 0015 | Reintentos de la publicación mensual cuando Geofabrik rechaza la descarga | Aceptada |
 | 0016 | Municipios con un límite incompleto o mal etiquetado en OpenStreetMap | Aceptada |
+| 0017 | Elegir y descargar el municipio en la app | Propuesta |
 
 ## Próximas decisiones (pendientes de investigar)
 

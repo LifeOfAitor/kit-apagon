@@ -1,6 +1,6 @@
 # 0016. Municipios con un límite incompleto o mal etiquetado en OpenStreetMap
 
-Fecha: 2026-11-28. Estado: Propuesta.
+Fecha: 2026-11-28. Estado: Aceptada.
 
 Completa las decisiones 0013 y 0014. El resto de ambas sigue vigente.
 

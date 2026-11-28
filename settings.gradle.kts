@@ -20,5 +20,6 @@ rootProject.name = "kit-apagon"
 include(":app")
 include(":core:ui")
 include(":core:package-format")
+include(":core:package-download")
 include(":feature:map")
 include(":tools:package-generator")

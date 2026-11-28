@@ -115,6 +115,8 @@ tasks.register("verifyAll") {
         ":core:ui:testDebugUnitTest",
         ":core:package-format:test",
         ":core:package-format:koverVerify",
+        ":core:package-download:test",
+        ":core:package-download:koverVerify",
         ":feature:map:testDebugUnitTest",
         ":tools:package-generator:test",
         ":tools:package-generator:koverVerify",

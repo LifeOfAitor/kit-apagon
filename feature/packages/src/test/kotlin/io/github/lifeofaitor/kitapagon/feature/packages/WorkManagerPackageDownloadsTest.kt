@@ -98,6 +98,18 @@ class WorkManagerPackageDownloadsTest {
         }
 
     @Test
+    fun knowsWhichPackagesAreStillBeingDownloaded() =
+        runBlocking {
+            assertEquals(emptySet<Any>(), downloads.packagesBeingDownloaded())
+            val job = downloads.start(target)
+            assertEquals(setOf(target.info.id), downloads.packagesBeingDownloaded())
+
+            connect(job)
+
+            assertEquals(emptySet<Any>(), downloads.packagesBeingDownloaded())
+        }
+
+    @Test
     fun aCancelledDownloadIsReportedAsCancelled() =
         runBlocking {
             val job = downloads.start(target)

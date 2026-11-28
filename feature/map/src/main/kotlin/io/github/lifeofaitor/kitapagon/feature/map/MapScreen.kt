@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ fun MapScreen(
     viewModel: MapViewModel,
     onCallPhone: (String) -> Boolean,
     onChooseMunicipality: () -> Unit,
+    onOpenMunicipalities: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -42,7 +44,7 @@ fun MapScreen(
     MapScreenContent(
         state = state,
         interaction = interaction,
-        actions = MapScreenActions.of(viewModel, onCallPhone, onChooseMunicipality),
+        actions = MapScreenActions.of(viewModel, onCallPhone, onChooseMunicipality, onOpenMunicipalities),
         modifier = modifier,
     ) { readyState, selectedPlace -> OfflineMap(readyState, selectedPlace, onPlaceTapped = viewModel::selectPlace) }
 }
@@ -56,12 +58,14 @@ internal data class MapScreenActions(
     val onListCategorySelected: (PlaceCategory?) -> Unit,
     val onCallPhone: (String) -> Boolean,
     val onChooseMunicipality: () -> Unit,
+    val onOpenMunicipalities: () -> Unit,
 ) {
     companion object {
         fun of(
             viewModel: MapViewModel,
             onCallPhone: (String) -> Boolean,
             onChooseMunicipality: () -> Unit,
+            onOpenMunicipalities: () -> Unit,
         ) = MapScreenActions(
             onShowMap = viewModel::showMap,
             onShowList = viewModel::showList,
@@ -70,6 +74,7 @@ internal data class MapScreenActions(
             onListCategorySelected = viewModel::filterListBy,
             onCallPhone = onCallPhone,
             onChooseMunicipality = onChooseMunicipality,
+            onOpenMunicipalities = onOpenMunicipalities,
         )
     }
 }
@@ -99,7 +104,12 @@ internal fun MapScreenContent(
             }
 
             is MapScreenState.PackageDamaged -> {
-                CenteredMessage(stringResource(R.string.map_package_damaged, state.packageId.value))
+                CenteredMessage(stringResource(R.string.map_package_damaged, state.packageId.value)) {
+                    Button(
+                        onClick = actions.onOpenMunicipalities,
+                        modifier = Modifier.heightIn(min = TouchTargets.minimum),
+                    ) { Text(stringResource(R.string.map_my_municipalities)) }
+                }
             }
 
             is MapScreenState.Ready -> {
@@ -118,6 +128,7 @@ private fun ReadyContent(
 ) {
     StepBackWithinTheMapScreen(interaction, actions)
     Column(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
+        MunicipalityHeader(state.name, actions.onOpenMunicipalities)
         ViewModeSwitch(interaction.viewMode, actions)
         if (state.arePlacesDamaged) {
             Text(
@@ -156,6 +167,23 @@ private fun StepBackWithinTheMapScreen(
         enabled = interaction.selectedPlace == null && interaction.viewMode == MapViewMode.LIST,
         onBack = actions.onShowMap,
     )
+}
+
+/** Which municipality is on the screen, and the way to change it, add another or delete one. */
+@Composable
+private fun MunicipalityHeader(
+    name: String,
+    onOpenMunicipalities: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        TextButton(onClick = onOpenMunicipalities, modifier = Modifier.heightIn(min = TouchTargets.minimum)) {
+            Text(stringResource(R.string.map_my_municipalities))
+        }
+    }
 }
 
 @Composable

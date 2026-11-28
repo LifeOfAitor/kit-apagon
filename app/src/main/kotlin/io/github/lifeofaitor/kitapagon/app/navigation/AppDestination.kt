@@ -4,4 +4,5 @@ enum class AppDestination {
     HOME,
     MAP,
     CHOOSE_MUNICIPALITY,
+    MY_MUNICIPALITIES,
 }

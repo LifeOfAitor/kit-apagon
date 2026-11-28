@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -47,6 +48,20 @@ class WorkManagerPackageDownloads(
         workManager.cancelWorkById(job)
     }
 
+    override suspend fun packagesBeingDownloaded(): Set<PackageId>? =
+        withContext(ioDispatcher) {
+            try {
+                workManager
+                    .getWorkInfosByTag(TAG)
+                    .get()
+                    .filter { !it.state.isFinished }
+                    .flatMap { work -> work.tags.mapNotNull(::packageIdOfTag) }
+                    .toSet()
+            } catch (expectedWhenWorkManagerFails: ExecutionException) {
+                null
+            }
+        }
+
     override val installedCount: Flow<Int> =
         workManager
             .getWorkInfosByTagFlow(TAG)
@@ -61,6 +76,7 @@ class WorkManagerPackageDownloads(
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
             .addTag(TAG)
+            .addTag(uniqueNameOf(target.info.id))
             .build()
 
     companion object {
@@ -68,6 +84,13 @@ class WorkManagerPackageDownloads(
         private const val BACKOFF_SECONDS = 30L
 
         internal fun uniqueNameOf(id: PackageId): String = "$TAG-${id.value}"
+
+        private fun packageIdOfTag(tag: String): PackageId? =
+            tag
+                .removePrefix("$TAG-")
+                .takeIf {
+                    it != tag
+                }?.let(PackageId::parseOrNull)
 
         internal fun inputOf(target: DownloadablePackage): Data =
             Data

@@ -22,6 +22,8 @@ Estas librerías forman parte del APK que recibe el usuario.
 | AndroidX Room y SQLite, incluidas por WorkManager | 2.7.0 y 2.5.0 | Apache-2.0 | La base de datos interna de WorkManager con sus trabajos pendientes |
 | AndroidX App Startup, Tracing y Concurrent Futures, incluidas por WorkManager | 1.2.0, 1.2.0 y 1.1.0 | Apache-2.0 | Arranque de WorkManager, marcas de rendimiento que solo se leen en el propio móvil con herramientas de desarrollo, y tareas asíncronas |
 | Guava `listenablefuture`, incluida por WorkManager | 1.0 | Apache-2.0 | Una sola interfaz para tareas asíncronas |
+| AndroidX DataStore (`datastore-preferences`) | 1.3.0 | Apache-2.0 | Recordar qué municipio muestra el mapa (decisión 0017) |
+| Protocol Buffers lite reempaquetado por DataStore (`datastore-preferences-external-protobuf`) | 1.3.0 | BSD-3-Clause | El formato del archivo en que DataStore guarda las preferencias |
 | Timber, incluida por MapLibre | 5.0.1 | Apache-2.0 | Registros internos de MapLibre |
 | kotlinx.coroutines, incluida por AndroidX | 1.10.2 | Apache-2.0 | Tareas en segundo plano |
 | kotlinx-serialization-json | 1.13.0 | Apache-2.0 | Leer el archivo de lugares de cada paquete |

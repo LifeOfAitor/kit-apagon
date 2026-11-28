@@ -2,6 +2,7 @@ package io.github.lifeofaitor.kitapagon.feature.packages
 
 import io.github.lifeofaitor.kitapagon.core.packagedownload.DownloadProgress
 import io.github.lifeofaitor.kitapagon.core.packagedownload.DownloadablePackage
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageId
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -42,6 +43,9 @@ interface PackageDownloads {
     fun stateOf(job: UUID): Flow<DownloadState?>
 
     fun cancel(job: UUID)
+
+    /** The packages whose download has not finished, or null if WorkManager could not answer. */
+    suspend fun packagesBeingDownloaded(): Set<PackageId>?
 
     /** Changes each time a package is installed, so the map can show it. */
     val installedCount: Flow<Int>

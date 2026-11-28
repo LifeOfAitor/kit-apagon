@@ -106,7 +106,7 @@ class PackageInstallerTest {
     @Test
     fun aPhoneThatCannotWriteFailsOnItsStorage() {
         val notADirectory = File(rootDirectory, "packages").apply { writeText("a file") }
-        val installer = PackageInstaller(notADirectory, PackageFileDownloader(HttpDownloads()))
+        val installer = PackageInstaller(PackageStorage(notADirectory), PackageFileDownloader(HttpDownloads()))
 
         assertEquals(
             PackageInstallResult.Failed(DownloadFailure.STORAGE),
@@ -114,31 +114,8 @@ class PackageInstallerTest {
         )
     }
 
-    @Test
-    fun putsBackAPackageWhoseReplacementWasCut() {
-        val replaced = File(rootDirectory, ".replaced/ES-20045").apply { mkdirs() }
-        File(replaced, "map.pmtiles").writeText("old map")
-
-        installer().recoverInterruptedReplacements()
-
-        assertEquals("old map", File(installedDirectory, "map.pmtiles").readText())
-        assertFalse(replaced.exists())
-    }
-
-    @Test
-    fun deletesThePreviousPackageWhenTheNewOneIsAlreadyInPlace() {
-        val replaced = File(rootDirectory, ".replaced/ES-20045").apply { mkdirs() }
-        installedDirectory.mkdirs()
-        File(installedDirectory, "map.pmtiles").writeText("new map")
-
-        installer().recoverInterruptedReplacements()
-
-        assertEquals("new map", File(installedDirectory, "map.pmtiles").readText())
-        assertFalse(replaced.exists())
-    }
-
     private fun installer(usableBytes: Long = Long.MAX_VALUE): PackageInstaller =
-        PackageInstaller(rootDirectory, PackageFileDownloader(HttpDownloads())) { usableBytes }
+        PackageInstaller(PackageStorage(rootDirectory), PackageFileDownloader(HttpDownloads())) { usableBytes }
 
     private fun installOldVersion() {
         installedDirectory.mkdirs()

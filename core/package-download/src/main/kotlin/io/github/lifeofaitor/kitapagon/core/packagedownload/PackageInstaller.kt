@@ -70,50 +70,32 @@ sealed interface PackageInstallResult {
 
 /**
  * Downloads a package next to the installed ones and puts it in place with one rename, so the
- * directory of a package always holds a complete package, old or new (decision 0017):
- *
- * - `<root>/.downloads/<id>/`: the files being downloaded, kept to resume, and the new package;
- * - `<root>/.replaced/<id>/`: the previous package, only during the replacement.
- *
- * Their names are not package identifiers, so [InstalledPackages] ignores them. One installation per
- * package at a time; every call blocks, so it must run on a background thread.
+ * directory of a package always holds a complete package, old or new (decision 0017). [PackageStorage]
+ * describes the directories it uses. One installation per package at a time; every call blocks, so it
+ * must run on a background thread.
  */
 class PackageInstaller(
-    private val rootDirectory: File,
+    private val storage: PackageStorage,
     private val downloader: PackageFileDownloader,
     private val usableBytesOf: (File) -> Long = File::getUsableSpace,
 ) {
-    private val downloadsDirectory = File(rootDirectory, DOWNLOADS_DIRECTORY_NAME)
-    private val replacedDirectory = File(rootDirectory, REPLACED_DIRECTORY_NAME)
-
     fun install(
         target: DownloadablePackage,
         observer: InstallObserver,
     ): PackageInstallResult =
         try {
-            recoverInterruptedReplacements()
+            storage.finishInterruptedOperations()
             downloadAndReplace(target, observer)
         } catch (expectedWhenThePhoneCannotWrite: IOException) {
-            recoverInterruptedReplacements()
+            storage.finishInterruptedOperations()
             PackageInstallResult.Failed(DownloadFailure.STORAGE)
         }
-
-    /**
-     * Puts back a previous package whose replacement was cut, for example because the phone turned off.
-     * The app calls it when it starts, before listing the packages.
-     */
-    fun recoverInterruptedReplacements() {
-        replacedDirectory.listFiles().orEmpty().forEach { replaced ->
-            val installed = File(rootDirectory, replaced.name)
-            if (installed.exists()) replaced.deleteRecursively() else replaced.renameTo(installed)
-        }
-    }
 
     private fun downloadAndReplace(
         target: DownloadablePackage,
         observer: InstallObserver,
     ): PackageInstallResult {
-        val workDirectory = File(downloadsDirectory, target.info.id.value).also(::createDirectory)
+        val workDirectory = storage.downloadDirectoryOf(target.info.id).also(storage::createDirectory)
         val parts =
             target.files.associateWith { file ->
                 File(workDirectory, "${file.kind.wireName}-${file.sha256}.part")
@@ -125,7 +107,7 @@ class PackageInstaller(
             .filter { it !in parts.values }
             .forEach { it.deleteRecursively() }
         val neededBytes = parts.entries.sumOf { (file, part) -> file.sizeBytes - minOf(part.length(), file.sizeBytes) }
-        val availableBytes = usableBytesOf(rootDirectory)
+        val availableBytes = usableBytesOf(storage.rootDirectory)
         if (availableBytes < neededBytes + SPACE_MARGIN_BYTES) {
             return PackageInstallResult.NotEnoughSpace(neededBytes + SPACE_MARGIN_BYTES, availableBytes)
         }
@@ -155,36 +137,12 @@ class PackageInstaller(
         parts: Map<PackageFile, File>,
         workDirectory: File,
     ): PackageInstallResult {
-        val newPackage = File(workDirectory, NEW_PACKAGE_DIRECTORY_NAME).also(::createDirectory)
-        parts.forEach { (file, part) -> move(part, File(newPackage, InstalledPackages.fileNameOf(file.kind))) }
+        val newPackage = File(workDirectory, NEW_PACKAGE_DIRECTORY_NAME).also(storage::createDirectory)
+        parts.forEach { (file, part) -> storage.move(part, File(newPackage, InstalledPackages.fileNameOf(file.kind))) }
         File(newPackage, InstalledPackages.INFO_FILE_NAME).writeText(InstalledPackageInfoWriter.write(target.info))
-        replace(File(rootDirectory, target.info.id.value), newPackage)
+        storage.replace(target.info.id, newPackage)
         workDirectory.deleteRecursively()
         return PackageInstallResult.Installed(target.info)
-    }
-
-    // The map on the screen keeps working while its files are replaced: they stay readable until closed.
-    private fun replace(
-        installed: File,
-        newPackage: File,
-    ) {
-        if (installed.exists()) {
-            createDirectory(replacedDirectory)
-            move(installed, File(replacedDirectory, installed.name))
-        }
-        move(newPackage, installed)
-        File(replacedDirectory, installed.name).deleteRecursively()
-    }
-
-    private fun move(
-        from: File,
-        to: File,
-    ) {
-        if (!from.renameTo(to)) throw IOException("Cannot move $from to $to")
-    }
-
-    private fun createDirectory(directory: File) {
-        if (!directory.isDirectory && !directory.mkdirs()) throw IOException("Cannot create $directory")
     }
 
     private class ProgressCounter(
@@ -204,8 +162,6 @@ class PackageInstaller(
     }
 
     companion object {
-        const val DOWNLOADS_DIRECTORY_NAME = ".downloads"
-        const val REPLACED_DIRECTORY_NAME = ".replaced"
         private const val NEW_PACKAGE_DIRECTORY_NAME = "package"
 
         // Room left for the system and other apps: a phone with its storage full stops working well.

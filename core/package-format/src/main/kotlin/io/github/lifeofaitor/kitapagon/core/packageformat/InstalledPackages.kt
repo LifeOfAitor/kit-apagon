@@ -11,6 +11,10 @@ data class InstalledPackage(
     val info: InstalledPackageInfo?,
 )
 
+/** The package the map shows: the one the person chose if it is installed, otherwise the first one. */
+fun List<InstalledPackage>.shownPackage(chosenId: PackageId?): InstalledPackage? =
+    firstOrNull { it.id == chosenId } ?: firstOrNull()
+
 /**
  * Municipal packages stored on the device, one directory per package named after its identifier:
  * `<rootDirectory>/<package id>/map.pmtiles` (decision 0010), optionally `places.json` (decision 0011)

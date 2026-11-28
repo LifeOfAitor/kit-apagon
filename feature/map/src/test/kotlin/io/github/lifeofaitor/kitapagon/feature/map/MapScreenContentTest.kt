@@ -33,10 +33,21 @@ class MapScreenContentTest {
     }
 
     @Test
-    fun namesTheDamagedPackage() {
+    fun namesTheDamagedPackageAndOffersTheListToDeleteIt() {
         showContent(MapScreenState.PackageDamaged(IRUN))
 
         composeRule.onNodeWithText("El mapa ES-20045 está dañado", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Mis municipios").performClick()
+        assertEquals(listOf("open municipalities"), requestedActions)
+    }
+
+    @Test
+    fun namesTheMunicipalityOnTheScreenAndOpensTheListOfMunicipalities() {
+        showContent(readyState().copy(name = "Irun"))
+
+        composeRule.onNodeWithText("Irun").assertIsDisplayed()
+        composeRule.onNodeWithText("Mis municipios").performClick()
+        assertEquals(listOf("open municipalities"), requestedActions)
     }
 
     @Test
@@ -107,6 +118,7 @@ class MapScreenContentTest {
             onListCategorySelected = { requestedActions += "category selected" },
             onCallPhone = { true },
             onChooseMunicipality = { requestedActions += "choose municipality" },
+            onOpenMunicipalities = { requestedActions += "open municipalities" },
         )
 
     private companion object {

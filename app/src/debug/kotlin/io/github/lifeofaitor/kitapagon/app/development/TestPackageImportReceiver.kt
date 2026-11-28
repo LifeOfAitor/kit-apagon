@@ -29,9 +29,13 @@ private val PUSHED_FILE_SUFFIXES =
     mapOf(
         ".pmtiles" to InstalledPackages.MAP_FILE_NAME,
         ".places.json" to InstalledPackages.PLACES_FILE_NAME,
+        ".package.json" to InstalledPackages.INFO_FILE_NAME,
     )
 
-/** Turns `<package id>.pmtiles` and `<package id>.places.json` into the files of that installed package. */
+/**
+ * Turns `<package id>.pmtiles`, `<package id>.places.json` and, to test the data of a downloaded
+ * package, `<package id>.package.json` into the files of that installed package.
+ */
 internal fun importPushedPackageFiles(
     pushedFilesDirectory: File,
     packagesDirectory: File,

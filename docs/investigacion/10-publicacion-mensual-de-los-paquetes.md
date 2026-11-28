@@ -1,7 +1,7 @@
 # Investigación: publicación mensual de los paquetes en GitHub
 
-Fecha: 2026-11-26. Estado: quinta revisión, con los rechazos de Geofabrik, la prueba en GitHub Actions
-y la comparación de toda España con el INE (apartados 10 a 12, 2026-11-27).
+Fecha: 2026-11-26. Estado: sexta revisión, con la primera versión completa (apartados 10 a 13,
+2026-11-27).
 
 ## Pregunta
 
@@ -200,6 +200,29 @@ comparación tarda 4 segundos.
 - Con ese filtro salen 51 provincias: todas menos Ceuta.
 - Pendiente: dar paquete a Ceuta, Casariche y Campo, corrigiendo los datos en OpenStreetMap o haciendo
   el generador tolerante a estos casos.
+
+## 13. Primera versión completa
+
+2026-11-27, ejecución manual del flujo del repositorio de datos con el generador del commit `f8e1e24`.
+Antes, una ejecución se detuvo al limpiar los restos de la prueba: `gh release delete --cleanup-tag`
+falla con un borrador, que no tiene etiqueta (corregido en la pull request 11).
+
+| Medida | Resultado |
+|---|---|
+| Tiempo total | 39 minutos: 2 de herramientas y compilación, 5 de descarga y exportación, 31 para las 51 provincias |
+| Paquetes | 8.129 de 51 provincias: todos los municipios oficiales menos Ceuta, Casariche y Campo (apartado 12) |
+| Tamaño de la versión | 16,2 GB, no los 26 GB estimados en el apartado 6 de la investigación 09: el País Vasco y Murcia están por encima de la media |
+| Tar más grande | Barcelona, 1,13 GB; ninguna provincia necesitó varios tar |
+| Paquete más grande | Madrid, 18,6 MB |
+| Municipios sin ningún lugar | 110 pueblos pequeños; su paquete tiene el mapa y una lista vacía |
+| Índice | 5,8 MB para 8.129 paquetes |
+
+- La publicación del índice es la vigente (`releases/latest`), con `index.json`, su firma y el informe.
+  No queda ningún borrador y el bot dejó el resumen en `VERSIONES.md`.
+- Comprobación desde fuera de GitHub, sin credenciales y como lo hará la app: el índice de la dirección
+  fija tiene una firma válida, y los archivos de Irun, Madrid, Barcelona, Sevilla, Burgos, Las Palmas
+  de Gran Canaria, Santa Cruz de Tenerife y Melilla llegan por descarga parcial con la respuesta 206,
+  el rango exacto y la huella del índice.
 
 ## Fuentes
 

@@ -17,6 +17,8 @@ Estas librerías forman parte del APK que recibe el usuario.
 | MapLibre Java (geojson y turf), incluida por MapLibre | 6.0.1 | MIT | Geometrías del mapa |
 | MapLibre Gestures, incluida por MapLibre | 0.0.4 | BSD-2-Clause | Gestos sobre el mapa |
 | OkHttp, incluida por MapLibre | 4.12.0 | Apache-2.0 | La usa MapLibre internamente; la app tiene la red desactivada para el mapa |
+| OkHttp | 5.5.1 | Apache-2.0 | Descargar la lista de municipios y los paquetes (`core:package-download`, decisión 0017). Llegará al APK con la parte 3c-3 y sustituirá a la 4.12.0 que pide MapLibre, que solo usa clases y métodos que siguen igual en la 5.5.1 (comprobado el 2026-11-28) |
+| Okio, incluida por OkHttp | 3.6.0; 3.18.1 con OkHttp 5.5.1 | Apache-2.0 | Lectura y escritura de datos dentro de OkHttp |
 | Timber, incluida por MapLibre | 5.0.1 | Apache-2.0 | Registros internos de MapLibre |
 | kotlinx.coroutines, incluida por AndroidX | 1.10.2 | Apache-2.0 | Tareas en segundo plano |
 | kotlinx-serialization-json | 1.13.0 | Apache-2.0 | Leer el archivo de lugares de cada paquete |
@@ -45,7 +47,8 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | kotlin-test | 2.4.21 | Apache-2.0 | Tests |
 | kotlinx-coroutines-test | 1.10.2 | Apache-2.0 | Tests de corrutinas |
 | Turbine | 1.2.1 | Apache-2.0 | Tests de flujos de datos |
-| Kotest (solo `kotest-property`) | 6.2.7 | Apache-2.0 | Pruebas basadas en propiedades del formato de los paquetes y del generador |
+| Kotest (solo `kotest-property`) | 6.2.7 | Apache-2.0 | Pruebas basadas en propiedades del formato de los paquetes, de su descarga y del generador |
+| MockWebServer 3 | 5.5.1 | Apache-2.0 | Servidor de prueba para la descarga de los paquetes (`core:package-download`) |
 | Robolectric | 4.18.1 | MIT | Tests de Android sin emulador |
 | AndroidX Test (core, ext-junit) y Compose UI Test | 1.7.0, 1.3.0 y BOM | Apache-2.0 | Tests |
 | Kover | 0.9.11 | Apache-2.0 | Cobertura de tests |
@@ -67,13 +70,13 @@ No se distribuyen con la app, así que su licencia no condiciona la del proyecto
 | Datos | Licencia | Cómo se cumple |
 |---|---|---|
 | Teselas de Protomaps derivadas de OpenStreetMap, en los paquetes municipales | ODbL 1.0 (obra producida) | Atribución "© OpenStreetMap (ODbL) · Protomaps" siempre visible sobre el mapa. Los paquetes no van dentro del APK: se instalan aparte. |
-| Relación de municipios del INE (`tools/package-generator/data/municipios-ine-2026.csv`), solo para comprobar que no falta ningún municipio; no llega a la app | CC BY 4.0 | El archivo y el informe de cada versión citan "Elaboración propia con datos extraídos del sitio web del INE: www.ine.es". |
+| Relación de municipios del INE (`tools/package-generator/data/municipios-ine-2026.csv`), para decidir qué municipios tienen paquete y comprobar que no falta ninguno. A la app solo llega el nombre de cada provincia, dentro de la lista de municipios (decisión 0017) | CC BY 4.0 | El archivo y el informe de cada versión citan "Elaboración propia con datos extraídos del sitio web del INE: www.ine.es". La pantalla de licencias de la app llevará la misma frase. |
 | Lugares (`places.json`) extraídos de OpenStreetMap con los extractos de Geofabrik | ODbL 1.0 (base de datos derivada) | Misma atribución visible, y cada ficha indica que el dato viene de OpenStreetMap. El generador es público, así que cualquiera puede rehacer el archivo, como exige la licencia. |
 
 ## Pendiente antes de la primera publicación
 
 - Pantalla de licencias dentro de la app con los avisos que exigen las licencias BSD, MIT y OFL de lo
-  que se distribuye con ella.
+  que se distribuye con ella, y la atribución del INE por los nombres de las provincias.
 
 ## Compatibilidad con la licencia del proyecto
 

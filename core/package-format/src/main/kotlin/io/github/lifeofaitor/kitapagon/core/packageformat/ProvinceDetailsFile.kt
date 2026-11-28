@@ -111,16 +111,8 @@ object ProvinceDetailsParser {
     }
 
     private fun areaOf(packageObject: JsonObject): Pair<GeographicBounds, GeographicPoint>? {
-        val bounds =
-            packageObject[IndexJson.BOUNDS]
-                .numbersOrNull(BOUNDS_SIZE)
-                ?.let { numbers -> GeographicBounds(numbers[WEST], numbers[SOUTH], numbers[EAST], numbers[NORTH]) }
-                ?.takeIf { it.isValid }
-        val centre =
-            packageObject[IndexJson.CENTRE]
-                .numbersOrNull(POINT_SIZE)
-                ?.let { (longitude, latitude) -> GeographicPoint(latitude, longitude) }
-                ?.takeIf { it.isValid }
+        val bounds = GeographicJson.boundsOf(packageObject[IndexJson.BOUNDS])
+        val centre = GeographicJson.pointOf(packageObject[IndexJson.CENTRE])
         return if (bounds != null && centre != null) bounds to centre else null
     }
 
@@ -161,15 +153,6 @@ object ProvinceDetailsParser {
         val sha256 = file.stringOrNull(IndexJson.SHA256)?.takeIf(IndexJson::isSha256)
         return if (offset != null && size != null && sha256 != null) FileLocation(offset, size, sha256) else null
     }
-
-    private const val BOUNDS_SIZE = 4
-    private const val POINT_SIZE = 2
-
-    // Bounds are written as [west, south, east, north], like the bbox of GeoJSON.
-    private const val WEST = 0
-    private const val SOUTH = 1
-    private const val EAST = 2
-    private const val NORTH = 3
 }
 
 /** Writes provincia-ES-NN.json. Used by the package generator; the app only reads. */
@@ -188,11 +171,8 @@ object ProvinceDetailsWriter {
             put(IndexJson.ID, packageDetails.id.value)
             put(IndexJson.NAME, packageDetails.names.official)
             put(IndexJson.ALTERNATIVE_NAMES, IndexJson.stringArrayOf(packageDetails.names.alternatives))
-            put(
-                IndexJson.BOUNDS,
-                IndexJson.numberArrayOf(packageDetails.bounds.run { listOf(west, south, east, north) }),
-            )
-            put(IndexJson.CENTRE, IndexJson.numberArrayOf(packageDetails.centre.run { listOf(longitude, latitude) }))
+            put(IndexJson.BOUNDS, GeographicJson.arrayOf(packageDetails.bounds))
+            put(IndexJson.CENTRE, GeographicJson.arrayOf(packageDetails.centre))
             put(IndexJson.BUNDLE, packageDetails.bundle)
             put(IndexJson.FILES, buildJsonArray { packageDetails.files.forEach { add(fileOf(it)) } })
         }

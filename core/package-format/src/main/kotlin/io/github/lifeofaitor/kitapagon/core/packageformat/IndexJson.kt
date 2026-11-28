@@ -69,6 +69,4 @@ internal object IndexJson {
         }
 
     fun stringArrayOf(values: List<String>): JsonArray = buildJsonArray { values.forEach { add(JsonPrimitive(it)) } }
-
-    fun numberArrayOf(values: List<Double>): JsonArray = buildJsonArray { values.forEach { add(JsonPrimitive(it)) } }
 }

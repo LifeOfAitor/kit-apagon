@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # Development only: builds on this computer the packages of every municipality of a region and their
 # signed index, the same steps the monthly job of the data repository will run for all of Spain
-# (decisions 0013 and 0014). Nothing is published, and the index is signed with a temporary key.
+# (decisions 0013, 0014 and 0017). Nothing is published, and the index is signed with a temporary key.
 #
 # Usage:
 #   scripts/build-region-packages.sh                                 the Basque Country (01, 20 and 48)
 #   scripts/build-region-packages.sh GEOFABRIK_REGION PROVINCES       for example europe/spain/navarra 31
 #
 # Writes to build/region-packages/:
-#   provinces/CODE/   the tar of the province, with the two files of each package, and its index part
-#   published/        index.json, index.json.sig, the temporary public key that checks it and the
-#                     report of the comparison with the official list of the INE
+#   provinces/CODE/   the tar of the province, with the two files of each package, and its details
+#   published/        municipios.json.gz, its signature, the details of each province, the temporary
+#                     public key that checks the signature and the report of the comparison with the
+#                     official list of the INE
 #
 # Requires: pmtiles and osmium (brew install pmtiles osmium-tool), openssl, tar, python3 and curl.
 
@@ -18,7 +19,7 @@ set -euo pipefail
 
 readonly DEFAULT_GEOFABRIK_REGION="europe/spain/pais-vasco"
 readonly DEFAULT_PROVINCES="01,20,48"
-readonly ADDRESS_TEMPLATE="https://github.com/LifeOfAitor/kit-apagon-datos/releases/download/{data_version}-ES-{province}/{file}"
+readonly DATA_REPOSITORY_ADDRESS="https://github.com/LifeOfAitor/kit-apagon-datos"
 readonly OFFICIAL_MUNICIPALITIES="tools/package-generator/data/municipios-ine-2026.csv"
 
 geofabrik_region="${1:-$DEFAULT_GEOFABRIK_REGION}"
@@ -81,9 +82,8 @@ build_provinces() {
             --map "${working_directory}/source.pmtiles" \
             --provinces "$province" \
             --data-version "$data_version" \
-            --address-template "$ADDRESS_TEMPLATE" \
             --output "${output_directory}/provinces/${province}"
-        cp "${output_directory}/provinces/${province}/index-part.json" "${working_directory}/parts/${province}.json"
+        cp "${output_directory}/provinces/${province}/provincia-ES-${province}.json" "${working_directory}/parts/"
     done
 }
 
@@ -96,35 +96,53 @@ sign_index() {
     cp "${keys_directory}/clave-publica-del-indice.txt" "${output_directory}/published/temporary-public-key.txt"
     KIT_APAGON_INDEX_SIGNING_KEY="$(cat "${keys_directory}/clave-privada-del-indice.txt")" \
         "$generator" sign-index --parts "${working_directory}/parts" \
-        --public-key "${keys_directory}/clave-publica-del-indice.txt" --output "${output_directory}/published"
+        --public-key "${keys_directory}/clave-publica-del-indice.txt" --output "${output_directory}/published" \
+        --details-address "${DATA_REPOSITORY_ADDRESS}/releases/download/{data_version}/{file}" \
+        --bundle-address "${DATA_REPOSITORY_ADDRESS}/releases/download/{data_version}-ES-{province}/{file}"
 }
 
 # Checked with other tools than the ones that wrote them, as the app will check them.
 verify_output() {
-    step "Checking the signature with openssl"
+    step "Checking the signature of the list with openssl"
     openssl base64 -d -A -in "${output_directory}/published/temporary-public-key.txt" -out "${working_directory}/public-key.der"
     openssl pkey -pubin -inform DER -in "${working_directory}/public-key.der" -out "${working_directory}/public-key.pem"
     openssl dgst -sha256 -verify "${working_directory}/public-key.pem" \
-        -signature "${output_directory}/published/index.json.sig" "${output_directory}/published/index.json"
+        -signature "${output_directory}/published/municipios.json.gz.sig" "${output_directory}/published/municipios.json.gz"
     step "Checking every tar with the tar tool of the system"
     find "${output_directory}/provinces" -name '*.tar' -print0 | xargs -0 -n 1 tar -tf | wc -l | sed 's/^ */files in the tars: /'
-    step "Checking the position, size and SHA-256 of every file in the index"
-    python3 -I - "${output_directory}/published/index.json" "${output_directory}/provinces" <<'PYTHON'
-import hashlib, json, os, sys
-index_path, provinces_directory = sys.argv[1], sys.argv[2]
-index = json.load(open(index_path))
-checked = 0
-for package in index["packages"]:
-    for listed in package["files"]:
-        bundle_name = listed["urls"][0].rsplit("/", 1)[1]
-        path = os.path.join(provinces_directory, package["province_code"], bundle_name)
-        with open(path, "rb") as bundle:
-            bundle.seek(listed["offset"])
-            content = bundle.read(listed["size"])
-        if len(content) != listed["size"] or hashlib.sha256(content).hexdigest() != listed["sha256"]:
-            sys.exit("Mismatch for " + listed["name"] + " in " + path)
-        checked += 1
-print("%d files of %d packages match the index" % (checked, len(index["packages"])))
+    step "Checking the details of each province and every file they point to"
+    python3 -I - "${output_directory}/published" "${output_directory}/provinces" <<'PYTHON'
+import gzip, hashlib, json, os, sys
+published_directory, provinces_directory = sys.argv[1], sys.argv[2]
+
+def read(path):
+    with open(path, "rb") as opened:
+        return opened.read()
+
+listing = json.loads(gzip.decompress(read(os.path.join(published_directory, "municipios.json.gz"))))
+municipality_count = len(listing["municipalities"])
+checked_files, checked_packages = 0, 0
+for province in listing["provinces"]:
+    published = province["details"]
+    compressed = read(os.path.join(published_directory, published["name"]))
+    if len(compressed) != published["size"] or hashlib.sha256(compressed).hexdigest() != published["sha256"]:
+        sys.exit("The list does not match " + published["name"])
+    details = json.loads(gzip.decompress(compressed))
+    if details["data_version"] != listing["data_version"] or details["province_code"] != province["code"]:
+        sys.exit("Wrong version or province in " + published["name"])
+    for package in details["packages"]:
+        path = os.path.join(provinces_directory, province["code"], package["bundle"])
+        for listed in package["files"]:
+            with open(path, "rb") as bundle:
+                bundle.seek(listed["offset"])
+                content = bundle.read(listed["size"])
+            if len(content) != listed["size"] or hashlib.sha256(content).hexdigest() != listed["sha256"]:
+                sys.exit("Mismatch for " + listed["name"] + " in " + path)
+            checked_files += 1
+        checked_packages += 1
+if checked_packages != municipality_count:
+    sys.exit("The list has %d municipalities and the details %d" % (municipality_count, checked_packages))
+print("%d files of %d packages in %d provinces match the list" % (checked_files, checked_packages, len(listing["provinces"])))
 PYTHON
 }
 

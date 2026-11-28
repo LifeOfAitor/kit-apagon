@@ -31,7 +31,6 @@ sealed interface GeneratorCommand {
         val sourceMap: File,
         val provinces: String?,
         val dataVersion: String,
-        val addressTemplate: String,
         val output: File,
     ) : GeneratorCommand
 
@@ -43,6 +42,10 @@ sealed interface GeneratorCommand {
         val parts: File,
         val publicKey: File,
         val output: File,
+        /** Where the details of each province are published, with {data_version} and {file}. */
+        val detailsAddress: String,
+        /** Where the tars are published, with {data_version}, {province} and {file}. */
+        val bundleAddress: String,
     ) : GeneratorCommand {
         companion object {
             const val SIGNING_KEY_VARIABLE = "KIT_APAGON_INDEX_SIGNING_KEY"
@@ -104,9 +107,9 @@ sealed interface GeneratorCommand {
               provinces --boundaries FILE --official FILE
               region-area --boundaries FILE --official FILE [--provinces 01,20,48]
               build-packages --boundaries FILE --official FILE --places FILE --map FILE
-                             --data-version YYYY-MM-DD --address-template URL --output DIRECTORY
-                             [--provinces 01,20,48]
+                             --data-version YYYY-MM-DD --output DIRECTORY [--provinces 01,20,48]
               sign-index --parts DIRECTORY --public-key FILE --output DIRECTORY
+                         --details-address URL --bundle-address URL
                          (private key in the variable ${SignIndex.SIGNING_KEY_VARIABLE})
               new-signing-key --output DIRECTORY
               official-municipalities --spreadsheet 26codmun.xlsx --output FILE
@@ -168,7 +171,7 @@ sealed interface GeneratorCommand {
                     },
                 "build-packages" to
                     Specification(
-                        setOf("boundaries", "official", "places", "map", "data-version", "address-template", "output"),
+                        setOf("boundaries", "official", "places", "map", "data-version", "output"),
                         setOf("provinces"),
                     ) {
                         BuildPackages(
@@ -178,13 +181,18 @@ sealed interface GeneratorCommand {
                             sourceMap = it.file("map"),
                             provinces = it.optional("provinces"),
                             dataVersion = it.required("data-version"),
-                            addressTemplate = it.required("address-template"),
                             output = it.file("output"),
                         )
                     },
                 "sign-index" to
-                    Specification(setOf("parts", "public-key", "output")) {
-                        SignIndex(it.file("parts"), it.file("public-key"), it.file("output"))
+                    Specification(setOf("parts", "public-key", "output", "details-address", "bundle-address")) {
+                        SignIndex(
+                            parts = it.file("parts"),
+                            publicKey = it.file("public-key"),
+                            output = it.file("output"),
+                            detailsAddress = it.required("details-address"),
+                            bundleAddress = it.required("bundle-address"),
+                        )
                     },
                 "new-signing-key" to Specification(setOf("output")) { NewSigningKey(it.file("output")) },
                 "official-municipalities" to

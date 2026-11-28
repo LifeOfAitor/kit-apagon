@@ -9,9 +9,10 @@
 #   4. Province by province: cuts the map from the Protomaps build of the day, builds the tar and
 #      publishes it as a prerelease, then deletes it from the disk.
 #   5. Signs the index, checking it with the public key of the app.
-#   6. Publishes the index: a commit in the data repository, a draft release with index.json and its
-#      signature, and only at the end the switch that makes it the latest release. Then deletes the
-#      releases older than the last two versions.
+#   6. Publishes the index: a commit in the data repository, a draft release with the signed list of
+#      municipalities, its signature and the details of each province (decision 0017), and only at the
+#      end the switch that makes it the latest release. Then deletes the releases older than the last
+#      two versions.
 #
 # A failure at any step ends the script before the index is published, so phones keep the version
 # they had. With PUBLISH_INDEX=false the index stays in a draft release, which is how a trial run of a
@@ -175,19 +176,20 @@ publish_province() {
         --map "${work_directory}/source.pmtiles" \
         --provinces "$province" \
         --data-version "$data_version" \
-        --address-template "https://github.com/${DATA_REPOSITORY}/releases/download/{data_version}-ES-{province}/{file}" \
         --output "$output_directory"
     step "Province ${province}: publishing ${tag}"
     gh release create "$tag" --repo "$DATA_REPOSITORY" --prerelease --title "Provincia ${province}, ${data_version}" \
-        --notes "Paquetes de la provincia ${province}, versión ${data_version}. Se marca como preliminar a propósito: la versión vigente es la publicación que contiene index.json. ${DATA_ATTRIBUTION}"
+        --notes "Paquetes de la provincia ${province}, versión ${data_version}. Se marca como preliminar a propósito: la versión vigente es la publicación que contiene municipios.json.gz. ${DATA_ATTRIBUTION}"
     with_retries gh release upload "$tag" "$output_directory"/*.tar --repo "$DATA_REPOSITORY" --clobber
-    mv "${output_directory}/index-part.json" "${work_directory}/parts/${province}.json"
+    mv "${output_directory}/provincia-ES-${province}.json" "${work_directory}/parts/"
     rm -rf "$output_directory" "${work_directory}/source.pmtiles"
 }
 
 sign_index() {
     "$generator" sign-index --parts "${work_directory}/parts" --public-key "$public_key_file" \
-        --output "${work_directory}/published"
+        --output "${work_directory}/published" \
+        --details-address "https://github.com/${DATA_REPOSITORY}/releases/download/{data_version}/{file}" \
+        --bundle-address "https://github.com/${DATA_REPOSITORY}/releases/download/{data_version}-ES-{province}/{file}"
 }
 
 # The commit gives the release its own date, so that GitHub orders the versions, and keeps the
@@ -210,7 +212,7 @@ write_index_notes() {
         echo "Índice de los paquetes municipales de Kit Apagón del ${data_version}."
         echo
         echo "- Paquetes: ${package_count}. Los de cada provincia están en la publicación ${data_version}-ES-NN."
-        echo "- index.json está firmado con la clave del proyecto (index.json.sig)."
+        echo "- municipios.json.gz está firmado con la clave del proyecto (municipios.json.gz.sig), y lleva la huella de cada provincia-ES-NN.json.gz."
         echo "- ${DATA_ATTRIBUTION}"
         echo
         cat "${work_directory}/informe.txt"
@@ -222,7 +224,7 @@ create_index_draft() {
     shift
     gh release create "$data_version" --repo "$DATA_REPOSITORY" --draft --title "$title" \
         --notes-file "${work_directory}/notas.md" "$@" \
-        "${work_directory}/published/index.json" "${work_directory}/published/index.json.sig" "${work_directory}/informe.txt"
+        "${work_directory}/published/"*.gz "${work_directory}/published/municipios.json.gz.sig" "${work_directory}/informe.txt"
 }
 
 publish_index() {

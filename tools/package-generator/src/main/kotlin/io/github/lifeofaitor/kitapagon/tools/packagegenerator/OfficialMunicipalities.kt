@@ -12,6 +12,8 @@ data class OfficialMunicipality(
     /** The five digit INE code: two of the province and three of the municipality. */
     val code: String,
     val name: String,
+    /** As the INE writes it, such as Gipuzkoa or A Coruña; the app shows it next to each municipality. */
+    val provinceName: String,
 )
 
 /**
@@ -22,6 +24,7 @@ data class OfficialMunicipality(
 object OfficialSpreadsheetReader {
     private val PROVINCE_CODE = Regex("^[0-9]{2}$")
     private val MUNICIPALITY_CODE = Regex("^[0-9]{3}$")
+    private const val HEADER_FIRST_CELL = "CPRO"
     private const val SHARED_STRINGS = "xl/sharedStrings.xml"
     private val WORKSHEET = Regex("^xl/worksheets/sheet[0-9]+\\.xml$")
 
@@ -39,8 +42,7 @@ object OfficialSpreadsheetReader {
                     .entries()
                     .asSequence()
                     .filter { entry -> WORKSHEET.matches(entry.name) }
-                    .flatMap { entry -> zip.getInputStream(entry).use { rowsOf(it, sharedStrings) } }
-                    .mapNotNull(::municipalityOrNull)
+                    .flatMap { entry -> municipalitiesOf(zip.getInputStream(entry).use { rowsOf(it, sharedStrings) }) }
                     .sortedBy { municipality -> municipality.code }
                     .toList()
             require(
@@ -49,17 +51,27 @@ object OfficialSpreadsheetReader {
             municipalities
         }
 
-    private fun municipalityOrNull(row: Map<String, String>): OfficialMunicipality? {
+    // The name of the province is in the row just above the header, the one that starts with CPRO.
+    private fun municipalitiesOf(rows: List<Map<String, String>>): List<OfficialMunicipality> {
+        val headerPosition = rows.indexOfFirst { row -> row["A"]?.trim() == HEADER_FIRST_CELL }
+        val provinceName =
+            rows
+                .getOrNull(headerPosition - 1)
+                ?.get("A")
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() } ?: return emptyList()
+        return rows.drop(headerPosition + 1).mapNotNull { row -> municipalityOrNull(row, provinceName) }
+    }
+
+    private fun municipalityOrNull(
+        row: Map<String, String>,
+        provinceName: String,
+    ): OfficialMunicipality? {
         val province = row["A"]?.trim()?.takeIf(PROVINCE_CODE::matches)
         val municipality = row["B"]?.trim()?.takeIf(MUNICIPALITY_CODE::matches)
         val name = row["D"]?.trim()?.takeIf { it.isNotEmpty() }
-        return if (province != null && municipality != null &&
-            name != null
-        ) {
-            OfficialMunicipality(province + municipality, name)
-        } else {
-            null
-        }
+        val code = if (province != null && municipality != null) province + municipality else null
+        return if (code != null && name != null) OfficialMunicipality(code, name, provinceName) else null
     }
 
     private fun sharedStringsOf(input: InputStream): List<String> {
@@ -159,18 +171,14 @@ object OfficialSpreadsheetReader {
             }.createXMLStreamReader(input)
 }
 
-/** The official list kept in the repository as `code,"name"` lines, one municipality per line. */
+/** The official list kept in the repository as `code,"name","province"` lines, one municipality per line. */
 object OfficialMunicipalitiesFile {
-    private const val HEADER = "codigo_ine,nombre"
-    private val LINE = Regex("^([0-9]{5}),\"(.*)\"$")
+    private const val HEADER = "codigo_ine,nombre,provincia"
+    private val LINE = Regex("^([0-9]{5}),\"((?:[^\"]|\"\")*)\",\"((?:[^\"]|\"\")*)\"$")
 
     fun write(municipalities: List<OfficialMunicipality>): String =
-        (
-            listOf(HEADER) +
-                municipalities.map {
-                    "${it.code},\"${it.name.replace("\"", "\"\"")}\""
-                }
-        ).joinToString("\n", postfix = "\n")
+        (listOf(HEADER) + municipalities.map { "${it.code},${quoted(it.name)},${quoted(it.provinceName)}" })
+            .joinToString("\n", postfix = "\n")
 
     /** Throws IllegalArgumentException for any line that is not a municipality. */
     fun read(text: String): List<OfficialMunicipality> =
@@ -180,8 +188,13 @@ object OfficialMunicipalitiesFile {
             .filter { line -> line.isNotBlank() }
             .map { line ->
                 val match = requireNotNull(LINE.matchEntire(line)) { "Not a line of the official list: $line" }
-                OfficialMunicipality(match.groupValues[1], match.groupValues[2].replace("\"\"", "\""))
+                val (code, name, provinceName) = match.destructured
+                OfficialMunicipality(code, unquoted(name), unquoted(provinceName))
             }.toList()
+
+    private fun quoted(text: String): String = "\"" + text.replace("\"", "\"\"") + "\""
+
+    private fun unquoted(text: String): String = text.replace("\"\"", "\"")
 }
 
 /** What OpenStreetMap has compared with the official list (decision 0014). */

@@ -23,7 +23,11 @@ class PublicationCommandsTest {
 
     @Test
     fun writesTheReportOfTheCheckAndAcceptsAProvinceWithEveryMunicipality() {
-        val official = officialFile(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("48020", "Bilbao"))
+        val official =
+            officialFile(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("48020", "Bilbao", "Bizkaia"),
+            )
         val report = File(temporaryDirectory, "informe.txt")
 
         runner.run(GeneratorCommand.CheckMunicipalities(boundaries, official, "20", report))
@@ -34,7 +38,11 @@ class PublicationCommandsTest {
 
     @Test
     fun stopsThePublicationButKeepsTheReportWhenTooManyAreMissing() {
-        val official = officialFile(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("20036", "Hondarribia"))
+        val official =
+            officialFile(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("20036", "Hondarribia", "Gipuzkoa"),
+            )
         val report = File(temporaryDirectory, "informe.txt")
 
         assertFailsWith<IllegalStateException> {
@@ -75,7 +83,11 @@ class PublicationCommandsTest {
 
     @Test
     fun printsTheOfficialMunicipalitiesWithoutABoundaryAndCompletesThemFromOverpass() {
-        val official = officialFile(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("51001", "Ceuta"))
+        val official =
+            officialFile(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("51001", "Ceuta", "Ciudad Autónoma de Ceuta"),
+            )
         val ceutaBounds = GeographicBounds(-5.42346, 35.87086, -5.2783, 35.918)
         val overpass =
             File(temporaryDirectory, "overpass.geojsonseq").apply {
@@ -93,7 +105,11 @@ class PublicationCommandsTest {
 
     @Test
     fun aRegionalExtractOnlyLooksForTheMissingMunicipalitiesOfItsProvinces() {
-        val official = officialFile(OfficialMunicipality("20045", "Irun"), OfficialMunicipality("51001", "Ceuta"))
+        val official =
+            officialFile(
+                OfficialMunicipality("20045", "Irun", "Gipuzkoa"),
+                OfficialMunicipality("51001", "Ceuta", "Ciudad Autónoma de Ceuta"),
+            )
 
         runner.run(GeneratorCommand.MissingBoundaries(boundaries, official, provinces = "20"))
 

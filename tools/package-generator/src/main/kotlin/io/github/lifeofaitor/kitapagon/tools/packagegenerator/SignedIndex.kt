@@ -1,11 +1,20 @@
 package io.github.lifeofaitor.kitapagon.tools.packagegenerator
 
+import io.github.lifeofaitor.kitapagon.core.packageformat.AddressTemplates
+import io.github.lifeofaitor.kitapagon.core.packageformat.GzipBytes
 import io.github.lifeofaitor.kitapagon.core.packageformat.IndexSignature
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndex
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexParser
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageIndexResult
+import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityEntry
+import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityList
+import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityListWriter
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceDetails
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceDetailsParser
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceDetailsResult
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceDetailsWriter
+import io.github.lifeofaitor.kitapagon.core.packageformat.ProvinceEntry
+import io.github.lifeofaitor.kitapagon.core.packageformat.PublishedFile
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
+import java.security.MessageDigest
 import java.security.PrivateKey
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
@@ -65,32 +74,88 @@ object SigningKeys {
     }
 }
 
+/** The files of the index ready to publish: the signed list and the details of each province, compressed. */
+class PublishedIndex(
+    val list: MunicipalityList,
+    /** municipios.json.gz, the bytes the signature covers. */
+    val compressedList: ByteArray,
+    /** provincia-ES-NN.json.gz by file name. */
+    val compressedProvinceDetails: Map<String, ByteArray>,
+)
+
 /**
- * Joins the index parts written province by province into the single index the app downloads. Any
- * doubt stops the publication, because a wrong index would reach every phone (decision 0013).
+ * Joins the parts written province by province into the published index (decision 0017). Any doubt
+ * stops the publication, because a wrong index would reach every phone.
  */
 object IndexParts {
     /** Throws IllegalArgumentException when the parts cannot form one consistent index. */
-    fun merge(partTexts: List<String>): PackageIndex {
+    fun merge(
+        partTexts: List<String>,
+        addresses: AddressTemplates,
+    ): PublishedIndex {
         require(partTexts.isNotEmpty()) { "There are no index parts to merge." }
-        val parts = partTexts.mapIndexed(::validPartOf)
+        val parts = partTexts.mapIndexed(::validPartOf).sortedBy { part -> part.provinceCode }
+        requireConsistent(parts)
+        val compressedDetails =
+            parts.associate { part ->
+                MunicipalityList.detailsFileNameOf(part.provinceCode) to
+                    compressed(ProvinceDetailsWriter.write(part))
+            }
+        val list =
+            MunicipalityList(
+                formatVersion = MunicipalityList.CURRENT_FORMAT_VERSION,
+                dataVersion = parts.first().dataVersion,
+                addresses = addresses,
+                provinces = parts.map { part -> provinceEntryOf(part, compressedDetails) },
+                municipalities =
+                    parts
+                        .flatMap { part -> part.packages.map { MunicipalityEntry(it.id, it.names, part.provinceCode) } }
+                        .sortedBy { municipality -> municipality.id.value },
+            )
+        return PublishedIndex(list, compressed(MunicipalityListWriter.write(list)), compressedDetails)
+    }
+
+    // One month of data, and each province and each package only once.
+    private fun requireConsistent(parts: List<ProvinceDetails>) {
         val dataVersions = parts.map { part -> part.dataVersion }.distinct()
         require(dataVersions.size == 1) { "The index parts belong to different data versions: $dataVersions" }
-        val packages = parts.flatMap { part -> part.packages }.sortedBy { indexedPackage -> indexedPackage.id.value }
-        val repeatedIds = packages.groupBy { indexedPackage -> indexedPackage.id }.filterValues { it.size > 1 }.keys
+        val repeatedProvinces = parts.groupBy { part -> part.provinceCode }.filterValues { it.size > 1 }.keys
+        require(repeatedProvinces.isEmpty()) { "These provinces appear in more than one part: $repeatedProvinces" }
+        val repeatedIds =
+            parts
+                .flatMap { part -> part.packages }
+                .groupBy { it.id }
+                .filterValues { it.size > 1 }
+                .keys
         require(repeatedIds.isEmpty()) { "These packages appear in more than one part: $repeatedIds" }
-        return PackageIndex(PackageIndex.CURRENT_FORMAT_VERSION, dataVersions.single(), packages)
     }
+
+    private fun provinceEntryOf(
+        part: ProvinceDetails,
+        compressedDetails: Map<String, ByteArray>,
+    ): ProvinceEntry {
+        val fileName = MunicipalityList.detailsFileNameOf(part.provinceCode)
+        val bytes = compressedDetails.getValue(fileName)
+        return ProvinceEntry(
+            part.provinceCode,
+            part.provinceName,
+            PublishedFile(fileName, bytes.size.toLong(), sha256Of(bytes)),
+        )
+    }
+
+    private fun compressed(text: String): ByteArray = GzipBytes.compress(text.toByteArray(Charsets.UTF_8))
+
+    private fun sha256Of(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString()
 
     private fun validPartOf(
         position: Int,
         partText: String,
-    ): PackageIndex {
-        val result = PackageIndexParser.parse(partText)
-        require(result is PackageIndexResult.Valid) { "Index part ${position + 1} is not a valid index: $result" }
+    ): ProvinceDetails {
+        val result = ProvinceDetailsParser.parse(partText)
+        require(result is ProvinceDetailsResult.Valid) { "Index part ${position + 1} is not valid: $result" }
         require(result.skippedPackageCount == 0) {
             "Index part ${position + 1} has ${result.skippedPackageCount} packages the app would skip."
         }
-        return result.index
+        return result.details
     }
 }

@@ -1,7 +1,10 @@
 package io.github.lifeofaitor.kitapagon.tools.packagegenerator
 
+import io.github.lifeofaitor.kitapagon.core.packageformat.BundledFile
 import io.github.lifeofaitor.kitapagon.core.packageformat.GeographicBounds
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageFile
+import io.github.lifeofaitor.kitapagon.core.packageformat.MunicipalityList
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageDetails
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageFileKind
 import io.github.lifeofaitor.kitapagon.core.packageformat.Place
 import io.github.lifeofaitor.kitapagon.core.packageformat.PlacesFileParser
 import io.github.lifeofaitor.kitapagon.core.packageformat.PlacesFileResult
@@ -17,7 +20,7 @@ class PackageBuilderTest {
     @TempDir
     lateinit var temporaryDirectory: File
 
-    private val template = DownloadAddressTemplate("https://example.org/{data_version}-ES-{province}/{file}")
+    private val provinceNames = mapOf("20" to "Gipuzkoa", "48" to "Bizkaia")
     private val irun = municipality()
     private val hondarribia =
         municipality("ES-20036", "Hondarribia", GeographicBounds(-1.8306, 43.3395, -1.7628, 43.3940))
@@ -40,31 +43,44 @@ class PackageBuilderTest {
         assertEquals(listOf(irun.packageArea, bilbao.packageArea), extractedAreas)
         assertEquals(listOf("ES-20.tar", "ES-48.tar"), built.bundles.map { it.name })
         assertEquals(listOf("ES-20.tar", "ES-48.tar"), temporaryDirectory.list().orEmpty().sorted())
-        val irunFiles =
-            built.indexPart.packages
-                .first { it.id == irun.id }
-                .files
-        assertEquals("map of ES-20045.pmtiles", String(bytesOf(irunFiles[0])))
-        val placesFile = PlacesFileParser.parse(String(bytesOf(irunFiles[1])))
+        val irunDetails = packageOf(built, "ES-20045")
+        assertEquals("ES-20.tar", irunDetails.bundle)
+        assertEquals("map of ES-20045.pmtiles", String(bytesOf(irunDetails, PackageFileKind.MAP)))
+        val placesFile = PlacesFileParser.parse(String(bytesOf(irunDetails, PackageFileKind.PLACES)))
         assertEquals(listOf(pharmacy), assertIs<PlacesFileResult.Valid>(placesFile).placesFile.places)
-        assertEquals(listOf("https://example.org/2026-12-01-ES-20/ES-20.tar"), irunFiles.flatMap { it.urls }.distinct())
         assertEquals(mapOf(irun.id to 1, bilbao.id to 0), built.placeCounts)
+    }
+
+    @Test
+    fun describesEachProvinceWithItsNameAndItsPackagesInOrder() {
+        val built = build(listOf(irun, bilbao, hondarribia), emptyList())
+
+        assertEquals(
+            listOf("20" to "Gipuzkoa", "48" to "Bizkaia"),
+            built.provinces.map {
+                it.provinceCode to
+                    it.provinceName
+            },
+        )
+        assertEquals(
+            listOf("ES-20036", "ES-20045"),
+            built.provinces
+                .first()
+                .packages
+                .map { it.id.value },
+        )
+        assertEquals(
+            listOf(MunicipalityList.CURRENT_FORMAT_VERSION),
+            built.provinces.map { it.formatVersion }.distinct(),
+        )
+        assertEquals(listOf("2026-12-01"), built.provinces.map { it.dataVersion }.distinct())
     }
 
     @Test
     fun writesAValidPlacesFileEvenForAMunicipalityWithoutPlaces() {
         val built = build(listOf(irun), emptyList(), outputDirectory = File(temporaryDirectory, "not-created-yet"))
 
-        val placesFile =
-            PlacesFileParser.parse(
-                String(
-                    bytesOf(
-                        built.indexPart.packages
-                            .single()
-                            .files[1],
-                    ),
-                ),
-            )
+        val placesFile = PlacesFileParser.parse(String(bytesOf(packageOf(built, "ES-20045"), PackageFileKind.PLACES)))
         assertEquals(emptyList(), assertIs<PlacesFileResult.Valid>(placesFile).placesFile.places)
     }
 
@@ -74,22 +90,25 @@ class PackageBuilderTest {
         val built = build(listOf(hondarribia, irun), emptyList(), maximumBundleBytes = 3_500)
 
         assertEquals(listOf("ES-20-1.tar", "ES-20-2.tar"), built.bundles.map { it.name })
-        val addresses =
-            built.indexPart.packages.associate {
-                it.id.value to
-                    it.files
-                        .first()
-                        .urls
-                        .single()
-            }
-        assertEquals("https://example.org/2026-12-01-ES-20/ES-20-1.tar", addresses["ES-20036"])
-        assertEquals("https://example.org/2026-12-01-ES-20/ES-20-2.tar", addresses["ES-20045"])
+        assertEquals("ES-20-1.tar", packageOf(built, "ES-20036").bundle)
+        assertEquals("ES-20-2.tar", packageOf(built, "ES-20045").bundle)
     }
 
     @Test
-    fun refusesADataVersionThatIsNotADate() {
+    fun refusesADataVersionThatIsNotADateOrAProvinceWithoutName() {
         assertFailsWith<IllegalArgumentException> {
-            PackageBuilder(fakeExtractor).build(listOf(irun), emptyList(), temporaryDirectory, "december", template)
+            PackageBuilder(
+                fakeExtractor,
+            ).build(listOf(irun), emptyList(), temporaryDirectory, "december", provinceNames)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            PackageBuilder(fakeExtractor).build(
+                listOf(irun),
+                emptyList(),
+                temporaryDirectory,
+                "2026-12-01",
+                mapOf("48" to "Bizkaia"),
+            )
         }
     }
 
@@ -119,11 +138,20 @@ class PackageBuilderTest {
         PackageBuilder(
             fakeExtractor,
             maximumBundleBytes,
-        ).build(municipalities, places, outputDirectory, "2026-12-01", template)
+        ).build(municipalities, places, outputDirectory, "2026-12-01", provinceNames)
 
-    // Reads a file of the index from its tar, as the app will with a partial download.
-    private fun bytesOf(file: PackageFile): ByteArray {
-        val bundle = temporaryDirectory.walk().first { it.name == file.urls.single().substringAfterLast('/') }
+    private fun packageOf(
+        built: BuiltPackages,
+        id: String,
+    ): PackageDetails = built.provinces.flatMap { it.packages }.first { it.id.value == id }
+
+    // Reads a file of the package from its tar, as the app will with a partial download.
+    private fun bytesOf(
+        packageDetails: PackageDetails,
+        kind: PackageFileKind,
+    ): ByteArray {
+        val file: BundledFile = packageDetails.files.single { it.kind == kind }
+        val bundle = temporaryDirectory.walk().first { it.name == packageDetails.bundle }
         return RandomAccessFile(bundle, "r").use { input ->
             ByteArray(file.sizeBytes.toInt()).also { bytes ->
                 input.seek(file.offset)

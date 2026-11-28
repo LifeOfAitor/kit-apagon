@@ -1,62 +1,27 @@
 package io.github.lifeofaitor.kitapagon.tools.packagegenerator
 
-import io.github.lifeofaitor.kitapagon.core.packageformat.IndexedPackage
-import io.github.lifeofaitor.kitapagon.core.packageformat.PackageFile
+import io.github.lifeofaitor.kitapagon.core.packageformat.BundledFile
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageDetails
+import io.github.lifeofaitor.kitapagon.core.packageformat.PackageFileKind
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/**
- * Where each published file can be downloaded. The template uses {data_version}, {province} and
- * {file}, for example
- * `https://github.com/LifeOfAitor/kit-apagon-datos/releases/download/{data_version}-ES-{province}/{file}`.
- */
-data class DownloadAddressTemplate(
-    val template: String,
-) {
-    init {
-        // The app ignores addresses that are not https (PackageIndexParser), so they are refused here.
-        require(template.startsWith("https://") && FILE_PLACEHOLDER in template) {
-            "The download address template must start with https:// and contain $FILE_PLACEHOLDER: $template"
-        }
-    }
-
-    fun addressOf(
-        dataVersion: String,
-        provinceCode: String,
-        fileName: String,
-    ): String =
-        template
-            .replace("{data_version}", dataVersion)
-            .replace("{province}", provinceCode)
-            .replace(FILE_PLACEHOLDER, fileName)
-
-    private companion object {
-        const val FILE_PLACEHOLDER = "{file}"
-    }
-}
-
 object IndexBuilder {
-    /** The entry of a municipality whose files were written into the tar at [bundleAddress]. */
-    fun indexedPackageOf(
+    /** The details of a municipality whose files were written into the tar named [bundleName]. */
+    fun packageDetailsOf(
         municipality: Municipality,
-        entries: List<TarEntry>,
-        bundleAddress: String,
-    ): IndexedPackage =
-        IndexedPackage(
+        entries: Map<PackageFileKind, TarEntry>,
+        bundleName: String,
+    ): PackageDetails =
+        PackageDetails(
             id = municipality.id,
             names = municipality.names,
-            provinceCode = municipality.provinceCode,
             bounds = municipality.packageArea,
             centre = municipality.centre,
+            bundle = bundleName,
             files =
-                entries.map { entry ->
-                    PackageFile(
-                        name = entry.name,
-                        offset = entry.offset,
-                        sizeBytes = entry.sizeBytes,
-                        sha256 = entry.sha256,
-                        urls = listOf(bundleAddress),
-                    )
+                entries.map { (kind, entry) ->
+                    BundledFile(kind, entry.name, entry.offset, entry.sizeBytes, entry.sha256)
                 },
         )
 
@@ -64,6 +29,9 @@ object IndexBuilder {
     fun mapFileNameOf(municipality: Municipality): String = "${municipality.id.value}.pmtiles"
 
     fun placesFileNameOf(municipality: Municipality): String = "${municipality.id.value}.places.json"
+
+    /** The part a build writes for each province; [IndexParts] joins them into the published index. */
+    fun partFileNameOf(provinceCode: String): String = "provincia-ES-$provinceCode.json"
 }
 
 /** The version of a month of data: the date it was generated, such as 2026-12-01. */

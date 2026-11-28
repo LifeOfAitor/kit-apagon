@@ -1,6 +1,6 @@
 # 0017. Elegir y descargar el municipio en la app
 
-Fecha: 2026-11-28. Estado: Propuesta.
+Fecha: 2026-11-28. Estado: Aceptada.
 
 Completa las decisiones 0013 y 0014 para la parte 3c. Sustituye el formato del índice de la 0014, que
 ninguna versión de la app ha llegado a leer.
